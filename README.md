@@ -28,6 +28,8 @@ Admin: announcements at `/admin` are for users with the admin role. Grant it in 
 update users set role = 'admin' where username = 'your_username';
 ```
 
+Payments: set the Razorpay **test** keys and use Razorpay's test cards to buy Pro from `/pricing`. Prices live in `src/config/plans.ts` (`PASSES`). For the webhook backup, point a Razorpay webhook at `/api/webhooks/razorpay` (events `payment.captured`, `payment.failed`).
+
 Clerk user sync: the app creates a user's row on first sign-in, so the webhook is optional locally. To receive webhooks locally, expose `/api/webhooks/clerk` with a tunnel (e.g. ngrok) and add it in the Clerk dashboard.
 
 ## Scripts

@@ -12,6 +12,9 @@ export default function LandingPage() {
             <Link href="/explore">Explore</Link>
           </Button>
           <Button asChild variant="ghost">
+            <Link href="/pricing">Pricing</Link>
+          </Button>
+          <Button asChild variant="ghost">
             <Link href="/sign-in">Sign in</Link>
           </Button>
         </nav>

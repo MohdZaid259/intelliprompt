@@ -7,14 +7,17 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// show: who sees the link
 const LINKS = [
-  { href: "/explore", label: "Explore", private: false },
-  { href: "/leaderboard", label: "Leaderboard", private: false },
-  { href: "/blog", label: "Blog", private: false },
-  { href: "/prompts", label: "My prompts", private: true },
-  { href: "/saved", label: "Saved", private: true },
-  { href: "/settings", label: "Settings", private: true },
-];
+  { href: "/explore", label: "Explore", show: "all" },
+  { href: "/leaderboard", label: "Leaderboard", show: "all" },
+  { href: "/blog", label: "Blog", show: "all" },
+  { href: "/pricing", label: "Pricing", show: "signed-out" },
+  { href: "/prompts", label: "My prompts", show: "signed-in" },
+  { href: "/saved", label: "Saved", show: "signed-in" },
+  { href: "/billing", label: "Billing", show: "signed-in" },
+  { href: "/settings", label: "Settings", show: "signed-in" },
+] as const;
 
 export function SiteHeader() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -25,21 +28,23 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-6xl items-center gap-6 p-4">
         <Logo />
         <nav className="flex flex-1 gap-1 overflow-x-auto" aria-label="Main">
-          {LINKS.filter((l) => !l.private || isSignedIn).map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              aria-current={pathname.startsWith(l.href) ? "page" : undefined}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
-                pathname.startsWith(l.href)
-                  ? "bg-accent font-medium"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {LINKS.filter((l) => l.show === "all" || (l.show === "signed-in") === !!isSignedIn).map(
+            (l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={pathname.startsWith(l.href) ? "page" : undefined}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
+                  pathname.startsWith(l.href)
+                    ? "bg-accent font-medium"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {l.label}
+              </Link>
+            ),
+          )}
         </nav>
         {isLoaded &&
           (isSignedIn ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { Lock, Play } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -119,6 +120,14 @@ export function ComparePanel({
         <CardTitle>Compare models</CardTitle>
         <CardDescription>
           Pick up to {MAX_MODELS} models. {remaining} of {limits.runsPerDay} runs left today.
+          {models.some((m) => m.locked) && (
+            <>
+              {" "}
+              <Link href="/billing" className="text-primary underline-offset-4 hover:underline">
+                Unlock all models with Pro
+              </Link>
+            </>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
