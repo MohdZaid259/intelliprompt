@@ -58,11 +58,14 @@ export function ComparePanel({
   models,
   runs,
   limits,
+  canMarkBest = true,
 }: {
   versionId: string;
   models: WorkspaceModel[];
   runs: WorkspaceRun[];
   limits: WorkspaceLimits;
+  /** Only the prompt owner picks the best answer. */
+  canMarkBest?: boolean;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
@@ -201,7 +204,7 @@ export function ComparePanel({
             <RunCard key={r.key} kind="live" modelId={r.modelId} text={r.text} error={r.error} />
           ))}
           {runs.map((r) => (
-            <RunCard key={r.id} kind="saved" run={r} />
+            <RunCard key={r.id} kind="saved" run={r} canMarkBest={canMarkBest} />
           ))}
         </div>
         {visibleLive.length === 0 && runs.length === 0 && (

@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { PLANS } from "@/config/plans";
@@ -16,6 +16,7 @@ import {
   updatePromptMeta,
 } from "@/server/data/prompts";
 import { deleteRun, toggleBestRun } from "@/server/data/runs";
+import { promptTag } from "@/server/public-card";
 import { recordCost, releaseQuota, reserveQuota } from "@/server/quota";
 import { authedAction, UserError } from "./safe-action";
 
@@ -58,6 +59,7 @@ export const updatePromptMetaAction = authedAction(
   z.object({ promptId: idSchema, title: titleSchema, tags: tagsSchema }),
   async ({ promptId, ...meta }, user) => {
     if (!(await updatePromptMeta(db(), user.id, promptId, meta))) throw notFound();
+    updateTag(promptTag(promptId));
     refresh();
   },
 );
@@ -66,6 +68,7 @@ export const deletePromptAction = authedAction(
   z.object({ promptId: idSchema }),
   async ({ promptId }, user) => {
     if (!(await deletePrompt(db(), user.id, promptId))) throw notFound();
+    updateTag(promptTag(promptId));
     redirect("/prompts");
   },
 );

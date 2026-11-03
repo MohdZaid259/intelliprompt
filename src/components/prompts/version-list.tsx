@@ -15,10 +15,12 @@ const SOURCE_LABEL: Record<WorkspaceVersion["source"], string | null> = {
 export function VersionList({
   versions,
   selectedId,
+  publishedId,
   onSelect,
 }: {
   versions: WorkspaceVersion[];
   selectedId: string;
+  publishedId: string | null;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -41,6 +43,7 @@ export function VersionList({
           >
             <span className="flex items-center gap-2 font-medium">
               v{v.number}
+              {v.id === publishedId && <Badge className="text-[10px]">public</Badge>}
               {label && (
                 <Badge variant="outline" className="text-[10px]">
                   {label}

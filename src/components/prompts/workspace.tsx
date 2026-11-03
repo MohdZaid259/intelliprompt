@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ComparePanel } from "./compare-panel";
 import { PromptHeader } from "./prompt-header";
+import { PublishControl } from "./publish-control";
 import type {
   WorkspaceLimits,
   WorkspaceModel,
@@ -40,6 +41,7 @@ export function PromptWorkspace({
   return (
     <div className="space-y-6">
       <PromptHeader prompt={prompt} />
+      <PublishControl prompt={prompt} selected={selected} versions={versions} />
       <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
         <div className="min-w-0 space-y-6">
           <VersionEditor
@@ -58,7 +60,12 @@ export function PromptWorkspace({
           />
         </div>
         <aside className="order-first lg:order-none">
-          <VersionList versions={versions} selectedId={selected.id} onSelect={select} />
+          <VersionList
+            versions={versions}
+            selectedId={selected.id}
+            publishedId={prompt.visibility === "public" ? prompt.publishedVersionId : null}
+            onSelect={select}
+          />
         </aside>
       </div>
     </div>

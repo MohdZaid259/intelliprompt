@@ -20,19 +20,20 @@ export async function listRunsForVersions(db: Db, ownerId: string, versionIds: s
     .orderBy(desc(runs.createdAt));
 }
 
-async function getOwnedRun(db: Db, ownerId: string, runId: string) {
+/** A run the prompt owner made on their own prompt (only these can be the "best" answer). */
+async function getOwnersRun(db: Db, ownerId: string, runId: string) {
   const [row] = await db
     .select({ id: runs.id, versionId: runs.versionId, isBest: runs.isBest, status: runs.status })
     .from(runs)
     .innerJoin(versions, eq(versions.id, runs.versionId))
     .innerJoin(prompts, eq(prompts.id, versions.promptId))
-    .where(and(eq(runs.id, runId), eq(prompts.ownerId, ownerId)));
+    .where(and(eq(runs.id, runId), eq(prompts.ownerId, ownerId), eq(runs.userId, ownerId)));
   return row ?? null;
 }
 
 /** Toggles a run as the best answer for its version (only one best per version). */
 export async function toggleBestRun(db: Db, ownerId: string, runId: string) {
-  const run = await getOwnedRun(db, ownerId, runId);
+  const run = await getOwnersRun(db, ownerId, runId);
   if (!run || run.status !== "ok") return null;
 
   return db.transaction(async (tx) => {
@@ -45,9 +46,20 @@ export async function toggleBestRun(db: Db, ownerId: string, runId: string) {
   });
 }
 
-export async function deleteRun(db: Db, ownerId: string, runId: string) {
-  const run = await getOwnedRun(db, ownerId, runId);
-  if (!run) return null;
-  await db.delete(runs).where(eq(runs.id, run.id));
-  return run;
+/** Whoever made a run can delete it. */
+export async function deleteRun(db: Db, userId: string, runId: string) {
+  const [row] = await db
+    .delete(runs)
+    .where(and(eq(runs.id, runId), eq(runs.userId, userId)))
+    .returning({ id: runs.id });
+  return row ?? null;
+}
+
+/** The best answer the owner picked for a version, if any. */
+export async function getBestRun(db: Db, versionId: string) {
+  const [row] = await db
+    .select()
+    .from(runs)
+    .where(and(eq(runs.versionId, versionId), eq(runs.isBest, true)));
+  return row ?? null;
 }

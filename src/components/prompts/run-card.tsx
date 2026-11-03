@@ -13,7 +13,7 @@ import { deleteRunAction, toggleBestRunAction } from "@/server/actions/prompts";
 import type { WorkspaceRun } from "./types";
 
 type Props =
-  | { kind: "saved"; run: WorkspaceRun }
+  | { kind: "saved"; run: WorkspaceRun; canMarkBest: boolean }
   | { kind: "live"; modelId: string; text: string; error: string | null };
 
 export function RunCard(props: Props) {
@@ -43,7 +43,7 @@ export function RunCard(props: Props) {
         </div>
         {props.kind === "saved" ? (
           <div className="flex gap-1">
-            {props.run.status === "ok" && (
+            {props.run.status === "ok" && props.canMarkBest && (
               <Button
                 size="icon"
                 variant="ghost"

@@ -2,15 +2,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PromptWorkspace } from "@/components/prompts/workspace";
 import { Skeleton } from "@/components/ui/skeleton";
-import { canUseModel, MODELS } from "@/config/models";
-import { PLANS } from "@/config/plans";
 import { idSchema } from "@/lib/validation";
-import { getActiveModelIds } from "@/server/ai/models";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { getOwnedPrompt } from "@/server/data/prompts";
 import { listRunsForVersions } from "@/server/data/runs";
-import { getUsage } from "@/server/quota";
+import { getRunContext } from "@/server/run-context";
 
 export default function PromptPage({ params }: PageProps<"/prompts/[id]">) {
   return (
@@ -28,29 +25,28 @@ async function Workspace({ params }: { params: PageProps<"/prompts/[id]">["param
   const prompt = await getOwnedPrompt(db(), user.id, id);
   if (!prompt) notFound();
 
-  const plan = PLANS[user.plan];
-  const [runs, activeIds, usage] = await Promise.all([
+  const [runs, { models, limits }] = await Promise.all([
     listRunsForVersions(
       db(),
       user.id,
       prompt.versions.map((v) => v.id),
     ),
-    getActiveModelIds(),
-    getUsage(db(), user.id),
+    getRunContext(user),
   ]);
-
-  const models = MODELS.filter((m) => activeIds.includes(m.id)).map((m) => ({
-    ...m,
-    locked: !canUseModel(m, plan.modelTier),
-  }));
 
   return (
     <PromptWorkspace
-      prompt={{ id: prompt.id, title: prompt.title, tags: prompt.tags }}
+      prompt={{
+        id: prompt.id,
+        title: prompt.title,
+        tags: prompt.tags,
+        visibility: prompt.visibility,
+        publishedVersionId: prompt.bestVersionId,
+      }}
       versions={prompt.versions}
       runs={runs}
       models={models}
-      limits={{ runsPerDay: plan.runsPerDay, runsUsed: usage.runs, maxTokens: plan.maxTokens }}
+      limits={limits}
     />
   );
 }

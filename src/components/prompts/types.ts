@@ -1,6 +1,13 @@
 import type { ModelInfo } from "@/config/models";
 
-export type WorkspacePrompt = { id: string; title: string; tags: string[] };
+export type WorkspacePrompt = {
+  id: string;
+  title: string;
+  tags: string[];
+  visibility: "private" | "public";
+  /** The version shown publicly (set when published). */
+  publishedVersionId: string | null;
+};
 
 export type WorkspaceVersion = {
   id: string;
