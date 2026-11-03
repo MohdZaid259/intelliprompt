@@ -25,11 +25,16 @@ const deps = {
 const worker = new Worker(
   QUEUE_NAME,
   async (job) => {
-    const sent = await processEmailJob(deps, {
-      id: job.id ?? job.name,
-      name: job.name,
-      data: job.data,
-    } as EmailJob & { id: string });
+    const { cursor, ...data } = job.data as EmailJob["data"] & { cursor?: string };
+    const sent = await processEmailJob(
+      deps,
+      { id: job.id ?? job.name, name: job.name, data } as EmailJob & { id: string },
+      {
+        // resume after the last batch that went out if this is a retry
+        cursor,
+        onBatchSent: (next) => job.updateData({ ...data, cursor: next }),
+      },
+    );
     console.log(`[email] ${job.name} ${job.id}: sent ${sent}`);
     return sent;
   },

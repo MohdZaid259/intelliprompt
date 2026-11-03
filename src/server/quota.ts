@@ -11,38 +11,40 @@ export function today() {
 }
 
 /**
- * Atomically takes one unit of today's quota. Returns false when the limit is reached.
- * Race-free: the increment only applies while the counter is below the limit.
+ * Atomically takes one unit of today's quota. Returns the day it was counted on (pass it to
+ * releaseQuota/recordCost so a run spanning midnight settles on the same day), or null when
+ * the limit is reached. Race-free: the increment only applies while below the limit.
  */
 export async function reserveQuota(db: Db, userId: string, kind: QuotaKind, limit: number) {
   const column = usageDaily[kind];
+  const day = today();
   const rows = await db
     .insert(usageDaily)
-    .values({ userId, day: today(), [kind]: 1 })
+    .values({ userId, day, [kind]: 1 })
     .onConflictDoUpdate({
       target: [usageDaily.userId, usageDaily.day],
       set: { [kind]: sql`${column} + 1` },
       setWhere: sql`${column} < ${limit}`,
     })
     .returning({ used: column });
-  return rows.length > 0;
+  return rows.length > 0 ? day : null;
 }
 
 /** Gives a unit back, e.g. when the model call failed. */
-export async function releaseQuota(db: Db, userId: string, kind: QuotaKind) {
+export async function releaseQuota(db: Db, userId: string, kind: QuotaKind, day: string) {
   const column = usageDaily[kind];
   await db
     .update(usageDaily)
     .set({ [kind]: sql`greatest(${column} - 1, 0)` })
-    .where(and(eq(usageDaily.userId, userId), eq(usageDaily.day, today())));
+    .where(and(eq(usageDaily.userId, userId), eq(usageDaily.day, day)));
 }
 
-export async function recordCost(db: Db, userId: string, costUsd: number) {
+export async function recordCost(db: Db, userId: string, costUsd: number, day: string) {
   if (costUsd <= 0) return;
   await db
     .update(usageDaily)
     .set({ costUsd: sql`${usageDaily.costUsd} + ${costUsd}` })
-    .where(and(eq(usageDaily.userId, userId), eq(usageDaily.day, today())));
+    .where(and(eq(usageDaily.userId, userId), eq(usageDaily.day, day)));
 }
 
 export async function getUsage(db: Db, userId: string) {

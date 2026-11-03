@@ -2,6 +2,12 @@ import { db } from "@/server/db";
 import { unsubscribe } from "@/server/data/users";
 import { verifyUnsubscribe } from "@/server/email/unsubscribe";
 
+/** Mail clients that open the List-Unsubscribe link with GET get the confirmation page. */
+export function GET(req: Request) {
+  const url = new URL(req.url);
+  return Response.redirect(new URL(`/unsubscribe${url.search}`, url), 303);
+}
+
 /**
  * Handles both the unsubscribe page's form and mail clients' one-click
  * (RFC 8058 List-Unsubscribe-Post), which POSTs to the link with the params in the URL.

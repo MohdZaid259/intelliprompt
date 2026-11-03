@@ -18,6 +18,7 @@ import {
 } from "@/server/data/social";
 import { enqueueEmail } from "@/server/email/queue";
 import { promptTag } from "@/server/public-card";
+import { checkRateLimit } from "@/server/rate-limit";
 import { authedAction, UserError } from "./safe-action";
 
 const notPublic = () => new UserError("That prompt isn't public.");
@@ -28,7 +29,7 @@ export const publishAction = authedAction(
     const published = await publishPrompt(db(), user.id, promptId, versionId);
     if (!published) throw new UserError("Couldn't publish that version.");
     await touchStreak(db(), user.id);
-    if (published.firstPublish) {
+    if (published.firstPublish && (await checkRateLimit("notifyFollowers", user.id)).ok) {
       // jobId dedupes: followers hear about a prompt once, even if it's unpublished and republished
       await enqueueEmail(
         { name: "notify-followers", data: { promptId } },
@@ -38,6 +39,7 @@ export const publishAction = authedAction(
     updateTag(promptTag(promptId));
     refresh();
   },
+  { rateLimit: "publish" },
 );
 
 export const unpublishAction = authedAction(
@@ -56,6 +58,7 @@ export const forkAction = authedAction(
     if (!fork) throw notPublic();
     redirect(`/prompts/${fork.id}`);
   },
+  { rateLimit: "fork" },
 );
 
 export const toggleLikeAction = authedAction(
@@ -65,6 +68,7 @@ export const toggleLikeAction = authedAction(
     if (!result) throw notPublic();
     return result;
   },
+  { rateLimit: "react" },
 );
 
 export const toggleSaveAction = authedAction(
@@ -74,6 +78,7 @@ export const toggleSaveAction = authedAction(
     if (!result) throw notPublic();
     return result;
   },
+  { rateLimit: "react" },
 );
 
 export const recordShareAction = authedAction(
@@ -83,6 +88,7 @@ export const recordShareAction = authedAction(
     if (!result) throw notPublic();
     return result;
   },
+  { rateLimit: "share" },
 );
 
 export const addCommentAction = authedAction(
@@ -98,6 +104,7 @@ export const addCommentAction = authedAction(
     if (!(await addComment(db(), user.id, promptId, body))) throw notPublic();
     refresh();
   },
+  { rateLimit: "comment" },
 );
 
 export const deleteCommentAction = authedAction(
@@ -117,6 +124,7 @@ export const toggleCommentLikeAction = authedAction(
     if (!result) throw new UserError("Comment not found.");
     return result;
   },
+  { rateLimit: "react" },
 );
 
 export const toggleFollowAction = authedAction(
@@ -126,4 +134,5 @@ export const toggleFollowAction = authedAction(
     if (!result) throw new UserError("You can't follow that user.");
     return result;
   },
+  { rateLimit: "follow" },
 );

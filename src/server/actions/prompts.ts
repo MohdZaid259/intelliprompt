@@ -78,7 +78,8 @@ export const enhanceAction = authedAction(
   z.object({ content: contentSchema }),
   async ({ content }, user) => {
     const limit = PLANS[user.plan].enhancesPerDay;
-    if (!(await reserveQuota(db(), user.id, "enhances", limit))) {
+    const quotaDay = await reserveQuota(db(), user.id, "enhances", limit);
+    if (!quotaDay) {
       throw new UserError(`You've used all ${limit} enhancements for today.`);
     }
     try {
@@ -87,15 +88,16 @@ export const enhanceAction = authedAction(
         createModel: openRouterModel,
         userId: user.id,
       });
-      await recordCost(db(), user.id, result.costUsd);
+      await recordCost(db(), user.id, result.costUsd, quotaDay);
       await touchStreak(db(), user.id);
       return { prompt: result.prompt, changes: result.changes };
     } catch (error) {
-      await releaseQuota(db(), user.id, "enhances");
+      await releaseQuota(db(), user.id, "enhances", quotaDay);
       console.error("enhance failed", error);
       throw new UserError("Couldn't enhance the prompt right now. Please try again.");
     }
   },
+  { rateLimit: "enhance" },
 );
 
 export const toggleBestRunAction = authedAction(

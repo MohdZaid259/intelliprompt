@@ -30,4 +30,5 @@ export const sendAnnouncementAction = authedAction(
     if (!process.env.REDIS_URL) throw new UserError("Email queue isn't configured (REDIS_URL).");
     await enqueueEmail({ name: "announcement", data }, { jobId: randomUUID() });
   },
+  { rateLimit: "announce" },
 );

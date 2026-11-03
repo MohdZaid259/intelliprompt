@@ -48,7 +48,7 @@ export function PromptCard({
         </div>
       )}
 
-      <div className="mt-auto -ml-2 flex items-center">
+      <div className="mt-auto -ml-2 flex flex-wrap items-center">
         <LikeButton promptId={item.id} liked={liked} count={item.likes} signedIn={signedIn} />
         <SaveButton promptId={item.id} saved={saved} count={item.saves} signedIn={signedIn} />
         <Link

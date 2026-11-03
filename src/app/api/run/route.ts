@@ -10,6 +10,7 @@ import { getRunnableVersion } from "@/server/data/prompts";
 import { touchStreak } from "@/server/data/engagement";
 import { insertRun } from "@/server/data/runs";
 import { recordCost, releaseQuota, reserveQuota } from "@/server/quota";
+import { checkRateLimit, rateLimitMessage } from "@/server/rate-limit";
 
 const fail = (status: number, error: string) => Response.json({ error }, { status });
 
@@ -17,6 +18,8 @@ const fail = (status: number, error: string) => Response.json({ error }, { statu
 export async function POST(req: Request) {
   const user = await getUser();
   if (!user) return fail(401, "Please sign in.");
+  const limited = await checkRateLimit("run", user.id);
+  if (!limited.ok) return fail(429, rateLimitMessage(limited.retryAfterSec));
 
   const parsed = runRequestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return fail(400, "Invalid request.");
@@ -33,9 +36,8 @@ export async function POST(req: Request) {
   const version = await getRunnableVersion(db(), user.id, versionId);
   if (!version) return fail(404, "Prompt not found.");
 
-  if (!(await reserveQuota(db(), user.id, "runs", plan.runsPerDay))) {
-    return fail(429, `You've used all ${plan.runsPerDay} runs for today.`);
-  }
+  const quotaDay = await reserveQuota(db(), user.id, "runs", plan.runsPerDay);
+  if (!quotaDay) return fail(429, `You've used all ${plan.runsPerDay} runs for today.`);
 
   const keys = openRouterKeys();
   const encoder = new TextEncoder();
@@ -51,7 +53,8 @@ export async function POST(req: Request) {
       createModel: openRouterModel,
       userId: user!.id,
       signal: req.signal,
-      onDelta: send,
+      // the trailer marker must never appear inside the answer
+      onDelta: (text) => send(text.replaceAll(TRAILER, "")),
     });
 
     // Saved before the stream closes, so the client can rely on it existing.
@@ -69,9 +72,12 @@ export async function POST(req: Request) {
       costUsd: outcome.costUsd.toFixed(6),
       latencyMs: outcome.latencyMs,
     });
-    if (outcome.status === "error") await releaseQuota(db(), user!.id, "runs");
-    else await touchStreak(db(), user!.id);
-    await recordCost(db(), user!.id, outcome.costUsd);
+    // refund real failures; a run the user stopped still spent tokens, so it counts
+    if (outcome.status === "error" && !outcome.aborted) {
+      await releaseQuota(db(), user!.id, "runs", quotaDay!);
+    }
+    if (outcome.status === "ok") await touchStreak(db(), user!.id);
+    await recordCost(db(), user!.id, outcome.costUsd, quotaDay!);
 
     return {
       id: run.id,
@@ -98,7 +104,7 @@ export async function POST(req: Request) {
         controller.close();
       } catch (error) {
         console.error("run failed", error);
-        await releaseQuota(db(), user.id, "runs");
+        await releaseQuota(db(), user.id, "runs", quotaDay);
         try {
           controller.error(error);
         } catch {}

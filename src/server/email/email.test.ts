@@ -8,7 +8,7 @@ import { createPrompt, getOwnedPrompt } from "@/server/data/prompts";
 import { toggleFollow } from "@/server/data/social";
 import { BATCH_SIZE, notifyFollowers, sendAnnouncement, type OutgoingEmail } from "./jobs";
 import { announcementEmail, newPromptEmail } from "./templates";
-import { unsubscribeUrl, verifyUnsubscribe } from "./unsubscribe";
+import { unsubscribeLinks, verifyUnsubscribe } from "./unsubscribe";
 
 const SECRET = "test-secret";
 let db: Db;
@@ -69,13 +69,20 @@ describe("templates", () => {
 
 describe("unsubscribe links", () => {
   it("verify only with the right signature and list", () => {
-    const url = new URL(unsubscribeUrl("https://app.test", SECRET, "f1", "follows"));
+    const url = new URL(unsubscribeLinks("https://app.test", SECRET, "f1", "follows").page);
     const params = Object.fromEntries(url.searchParams);
     expect(verifyUnsubscribe(SECRET, params)).toEqual({ userId: "f1", list: "follows" });
     expect(verifyUnsubscribe(SECRET, { ...params, u: "n1" })).toBeNull();
     expect(verifyUnsubscribe(SECRET, { ...params, l: "newsletter" })).toBeNull();
     expect(verifyUnsubscribe("other-secret", params)).toBeNull();
     expect(verifyUnsubscribe(SECRET, { u: "f1", l: "follows", t: "short" })).toBeNull();
+  });
+
+  it("point the one-click header at the POST endpoint, with the same signed params", () => {
+    const { page, oneClick } = unsubscribeLinks("https://app.test/", SECRET, "f1", "follows");
+    expect(new URL(page).pathname).toBe("/unsubscribe");
+    expect(new URL(oneClick).pathname).toBe("/api/unsubscribe");
+    expect(new URL(oneClick).search).toBe(new URL(page).search);
   });
 });
 
@@ -92,8 +99,9 @@ describe("notifyFollowers", () => {
     expect(email.to).toBe("f1@x.com");
     expect(email.subject).toBe("Ada published “Cold <email>”");
     expect(email.html).toContain(`https://app.test/p/${id}`);
-    expect(email.unsubscribeUrl).toContain("u=f1");
-    expect(sent[0].key).toBe(`notify-${id}-0`);
+    expect(email.oneClickUnsubscribeUrl).toMatch(/\/api\/unsubscribe\?u=f1&/);
+    expect(email.html).toContain("/unsubscribe?u=f1&amp;");
+    expect(sent[0].key).toMatch(new RegExp(`^notify-${id}-[\\w-]{16}$`));
   });
 
   it("sends nothing if the prompt was unpublished before the job ran", async () => {
@@ -115,12 +123,42 @@ describe("notifyFollowers", () => {
     for (const u of many) await toggleFollow(db, u.id, "author");
 
     expect(await notifyFollowers(deps(), id)).toBe(BATCH_SIZE + 20);
-    expect(sent.map((b) => [b.key, b.emails.length])).toEqual([
-      [`notify-${id}-0`, BATCH_SIZE],
-      [`notify-${id}-1`, 20],
-    ]);
+    expect(sent.map((b) => b.emails.length)).toEqual([BATCH_SIZE, 20]);
+    expect(new Set(sent.map((b) => b.key)).size).toBe(2);
     const all = sent.flatMap((b) => b.emails.map((e) => e.to));
     expect(new Set(all).size).toBe(all.length);
+  });
+
+  it("resumes after the last sent batch when a job is retried", async () => {
+    const id = await publishedPrompt();
+    const many = Array.from({ length: BATCH_SIZE + 20 }, (_, i) => ({
+      id: `u${String(i).padStart(4, "0")}`,
+      username: `u${i}`,
+      email: `u${i}@x.com`,
+    }));
+    await db.insert(users).values(many);
+    for (const u of many) await toggleFollow(db, u.id, "author");
+
+    // first attempt: batch 1 goes out, batch 2 fails
+    let cursor: string | undefined;
+    let calls = 0;
+    const flaky = {
+      ...deps(),
+      send: async (emails: OutgoingEmail[], key: string) => {
+        if (++calls === 2) throw new Error("Resend down");
+        sent.push({ key, emails });
+      },
+    };
+    await expect(
+      notifyFollowers(flaky, id, { onBatchSent: async (c) => void (cursor = c) }),
+    ).rejects.toThrow("Resend down");
+    expect(cursor).toBe(`u${String(BATCH_SIZE - 1).padStart(4, "0")}`);
+
+    // retry: only the remaining 20 are sent
+    await notifyFollowers(deps(), id, { cursor });
+    expect(sent.map((b) => b.emails.length)).toEqual([BATCH_SIZE, 20]);
+    const all = sent.flatMap((b) => b.emails.map((e) => e.to));
+    expect(new Set(all).size).toBe(BATCH_SIZE + 20);
   });
 });
 
@@ -128,6 +166,6 @@ describe("sendAnnouncement", () => {
   it("only emails newsletter subscribers", async () => {
     expect(await sendAnnouncement(deps(), { subject: "Hi", body: "News" }, "job1")).toBe(1);
     expect(sent[0].emails.map((e) => e.to)).toEqual(["n1@x.com"]);
-    expect(sent[0].key).toBe("announce-job1-0");
+    expect(sent[0].key).toMatch(/^announce-job1-/);
   });
 });

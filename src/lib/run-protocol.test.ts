@@ -17,6 +17,12 @@ describe("parseRunStream", () => {
     expect(parseRunStream("Hello wor")).toEqual({ text: "Hello wor", summary: null });
   });
 
+  it("waits for a summary split across chunks instead of throwing", () => {
+    const full = "Hi" + TRAILER + JSON.stringify(summary);
+    expect(parseRunStream(full.slice(0, full.length - 5))).toEqual({ text: "Hi", summary: null });
+    expect(parseRunStream(full).summary).toEqual(summary);
+  });
+
   it("splits the answer from the trailing summary", () => {
     const received = "Hello world" + TRAILER + JSON.stringify(summary);
     expect(parseRunStream(received)).toEqual({ text: "Hello world", summary });

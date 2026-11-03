@@ -13,7 +13,7 @@ export function resendSender(apiKey: string, from: string): SendBatch {
         html: e.html,
         text: e.text,
         headers: {
-          "List-Unsubscribe": `<${e.unsubscribeUrl}>`,
+          "List-Unsubscribe": `<${e.oneClickUnsubscribeUrl}>`,
           "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         },
       })),

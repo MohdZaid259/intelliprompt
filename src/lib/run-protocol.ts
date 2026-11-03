@@ -22,12 +22,20 @@ export type RunSummary = {
   latencyMs: number;
 };
 
-/** Splits what the client received so far into the answer text and (once complete) the summary. */
+/**
+ * Splits what the client received so far into the answer text and (once complete) the summary.
+ * The server strips TRAILER from model output, and the summary may arrive split across chunks,
+ * so an incomplete summary is simply "not yet".
+ */
 export function parseRunStream(received: string): { text: string; summary: RunSummary | null } {
-  const at = received.indexOf(TRAILER);
+  const at = received.lastIndexOf(TRAILER);
   if (at === -1) return { text: received, summary: null };
-  return {
-    text: received.slice(0, at),
-    summary: JSON.parse(received.slice(at + TRAILER.length)) as RunSummary,
-  };
+  try {
+    return {
+      text: received.slice(0, at),
+      summary: JSON.parse(received.slice(at + TRAILER.length)) as RunSummary,
+    };
+  } catch {
+    return { text: received.slice(0, at), summary: null };
+  }
 }

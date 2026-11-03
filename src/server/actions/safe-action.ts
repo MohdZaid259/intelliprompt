@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 import { requireUser, type SessionUser } from "@/server/auth";
+import { checkRateLimit, rateLimitMessage, type RateLimitName } from "@/server/rate-limit";
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -9,15 +10,19 @@ export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string
 export class UserError extends Error {}
 
 /**
- * Wraps a server action: requires a signed-in user, validates input with zod, and turns
- * failures into `{ ok: false, error }` so client code never sees internals.
+ * Wraps a server action: requires a signed-in user, applies a per-user rate limit
+ * ("write" unless stated), validates input with zod, and turns failures into
+ * `{ ok: false, error }` so client code never sees internals.
  */
 export function authedAction<S extends z.ZodType, T>(
   schema: S,
   fn: (input: z.infer<S>, user: SessionUser) => Promise<T>,
+  opts: { rateLimit?: RateLimitName } = {},
 ) {
   return async (raw: z.input<S>): Promise<ActionResult<T>> => {
     const user = await requireUser();
+    const limited = await checkRateLimit(opts.rateLimit ?? "write", user.id);
+    if (!limited.ok) return { ok: false, error: rateLimitMessage(limited.retryAfterSec) };
     const parsed = schema.safeParse(raw);
     if (!parsed.success) {
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };

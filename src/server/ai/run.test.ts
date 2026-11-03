@@ -65,6 +65,7 @@ describe("runModel", () => {
     expect(deltas).toEqual(["Hel", "lo"]);
     expect(outcome).toMatchObject({
       status: "ok",
+      aborted: false,
       output: "Hello",
       error: null,
       inputTokens: 12,
@@ -101,6 +102,19 @@ describe("runModel", () => {
     expect(outcome.status).toBe("error");
     expect(outcome.output).toBe("partial");
     expect(outcome.error).toMatch(/busy/);
+  });
+
+  it("marks a run the client stopped as aborted, not ok", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const outcome = await runModel({
+      ...base,
+      keys: ["k1"],
+      createModel: () => streamingModel(["never"]),
+      signal: controller.signal,
+      onDelta: () => {},
+    });
+    expect(outcome).toMatchObject({ status: "error", aborted: true });
   });
 
   it("reports an error when every key fails", async () => {

@@ -101,7 +101,11 @@ export async function listPublicPrompts(db: Db, opts: FeedOptions = {}) {
     .groupBy(comments.promptId)
     .as("comment_counts");
   const forkCounts = db
-    .select({ promptId: prompts.forkedFromId, n: countAs("fork_n") })
+    // distinct people who forked it, so one account can't inflate the count
+    .select({
+      promptId: prompts.forkedFromId,
+      n: sql<number>`count(distinct ${prompts.ownerId})::int`.as("fork_n"),
+    })
     .from(prompts)
     .groupBy(prompts.forkedFromId)
     .as("fork_counts");
@@ -257,4 +261,14 @@ export async function forkPrompt(db: Db, userId: string, promptId: string) {
     });
     return fork;
   });
+}
+
+/** Public prompt ids for the sitemap, most recently updated first. */
+export async function listPublicPromptIds(db: Db, limit = 5000) {
+  return db
+    .select({ id: prompts.id, updatedAt: prompts.updatedAt })
+    .from(prompts)
+    .where(eq(prompts.visibility, "public"))
+    .orderBy(desc(prompts.updatedAt))
+    .limit(limit);
 }

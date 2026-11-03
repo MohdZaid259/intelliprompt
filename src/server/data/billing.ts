@@ -42,18 +42,16 @@ export async function fulfillPayment(
         ),
       )
       .for("update");
-    if (!order || !isPassKey(order.planKey)) return { status: "not_found" };
+    // userId is null once the buyer deleted their account; nothing to grant then
+    if (!order || !order.userId || !isPassKey(order.planKey)) return { status: "not_found" };
+    const userId = order.userId;
 
     if (order.status === "paid") {
       const [user] = await tx
         .select({ planExpiresAt: users.planExpiresAt })
         .from(users)
-        .where(eq(users.id, order.userId));
-      return {
-        status: "already_paid",
-        userId: order.userId,
-        planExpiresAt: user?.planExpiresAt ?? null,
-      };
+        .where(eq(users.id, userId));
+      return { status: "already_paid", userId, planExpiresAt: user?.planExpiresAt ?? null };
     }
     if (p.amountPaise !== undefined && p.amountPaise !== order.amountPaise) {
       return { status: "amount_mismatch" };
@@ -71,10 +69,10 @@ export async function fulfillPayment(
         plan: "pro",
         planExpiresAt: sql`greatest(coalesce(${users.planExpiresAt}, now()), now()) + make_interval(days => ${days})`,
       })
-      .where(eq(users.id, order.userId))
+      .where(eq(users.id, userId))
       .returning({ planExpiresAt: users.planExpiresAt });
 
-    return { status: "fulfilled", userId: order.userId, planExpiresAt: user.planExpiresAt };
+    return { status: "fulfilled", userId, planExpiresAt: user.planExpiresAt };
   });
 }
 

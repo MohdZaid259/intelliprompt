@@ -39,6 +39,7 @@ export const createOrderAction = authedAction(
       prefill: { name: me?.name ?? "", email: me?.email ?? "" },
     };
   },
+  { rateLimit: "order" },
 );
 
 /** Checkout success callback: verify Razorpay's signature, then grant Pro (idempotent). */

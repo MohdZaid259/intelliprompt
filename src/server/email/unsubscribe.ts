@@ -7,10 +7,15 @@ function signature(secret: string, userId: string, list: EmailList) {
   return createHmac("sha256", secret).update(`${userId}:${list}`).digest("base64url");
 }
 
-/** Link that unsubscribes without signing in; the HMAC stops people unsubscribing others. */
-export function unsubscribeUrl(appUrl: string, secret: string, userId: string, list: EmailList) {
+/**
+ * Unsubscribe links that work without signing in; the HMAC stops people unsubscribing others.
+ * `page` is the confirmation page for the email body; `oneClick` is the endpoint mail clients
+ * POST to from the List-Unsubscribe header (RFC 8058).
+ */
+export function unsubscribeLinks(appUrl: string, secret: string, userId: string, list: EmailList) {
   const q = new URLSearchParams({ u: userId, l: list, t: signature(secret, userId, list) });
-  return `${appUrl.replace(/\/$/, "")}/unsubscribe?${q}`;
+  const base = appUrl.replace(/\/$/, "");
+  return { page: `${base}/unsubscribe?${q}`, oneClick: `${base}/api/unsubscribe?${q}` };
 }
 
 export function verifyUnsubscribe(

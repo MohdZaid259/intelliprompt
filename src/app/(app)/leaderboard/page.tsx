@@ -31,7 +31,7 @@ export default function LeaderboardPage({ searchParams }: PageProps<"/leaderboar
         <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
         <p className="text-muted-foreground text-sm">
           Points come from what others do with your public prompts: like +{P.like}, save +{P.save},
-          fork +{P.fork}, and +{P.publish} per published prompt.
+          and fork +{P.fork}. Your own clicks don&apos;t count.
         </p>
       </div>
       <Suspense fallback={<Skeleton className="h-96 w-full" />}>

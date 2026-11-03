@@ -4,6 +4,8 @@ import { costFrom, errorMessage, isKeyError, type ModelFactory } from "./client"
 
 export type RunOutcome = {
   status: "ok" | "error";
+  /** The client disconnected before the answer finished. */
+  aborted: boolean;
   output: string;
   error: string | null;
   inputTokens: number;
@@ -65,15 +67,19 @@ export async function runModel(opts: RunOptions): Promise<RunOutcome> {
     if (!(lastError && output === "" && isKeyError(lastError))) break;
   }
 
-  const failed = lastError !== null || (output === "" && !opts.signal?.aborted);
+  const aborted = opts.signal?.aborted ?? false;
+  const failed = aborted || lastError !== null || output === "";
   return {
     status: failed ? "error" : "ok",
+    aborted,
     output,
-    error: failed
-      ? lastError
+    error: aborted
+      ? "Stopped before the answer finished."
+      : lastError
         ? errorMessage(lastError)
-        : "The model returned an empty answer."
-      : null,
+        : output === ""
+          ? "The model returned an empty answer."
+          : null,
     inputTokens,
     outputTokens,
     costUsd,

@@ -2,7 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PASSES } from "@/config/plans";
 import { createTestDb } from "@/server/db/test-db";
-import { users } from "@/server/db/schema";
+import { payments, users } from "@/server/db/schema";
 import type { Db } from "@/server/db/types";
 import { fulfillPayment, listPayments, markPaymentFailed, recordOrder } from "./billing";
 
@@ -98,6 +98,21 @@ describe("fulfillPayment", () => {
 
   it("returns not_found for unknown orders", async () => {
     expect((await fulfillPayment(db, { orderId: "nope", paymentId: "pay_x" })).status).toBe(
+      "not_found",
+    );
+  });
+});
+
+describe("account deletion", () => {
+  it("keeps payment records when the user is deleted", async () => {
+    await recordOrder(db, { userId: "u1", orderId: "order_1", passKey: "pro_month" });
+    await fulfillPayment(db, { orderId: "order_1", paymentId: "pay_1" });
+    await db.delete(users).where(eq(users.id, "u1"));
+
+    const [row] = await db.select().from(payments);
+    expect(row).toMatchObject({ razorpayOrderId: "order_1", status: "paid", userId: null });
+    // and a late webhook for it can't grant anything
+    expect((await fulfillPayment(db, { orderId: "order_1", paymentId: "pay_1" })).status).toBe(
       "not_found",
     );
   });

@@ -3,7 +3,7 @@
 > Status: draft for review · 2026-11-03
 > Decisions locked: Postgres + Drizzle · fresh rebuild (reuse UI) · one paid OpenRouter key + daily quota · Pro plan in MVP · no direct messages · MVP also includes leaderboard, streaks, blog, newsletter, BullMQ email queue + worker, saves/shares, comment likes
 
-> Progress: Milestones 0, 1, 2, 3 and 3b are built (not yet tested in a browser with real keys). Next: 4 Hardening, then 5 Launch.
+> Progress: Milestones 0–4 are built (not yet tested in a browser with real keys). Next: one browser test pass with real keys, then 5 Launch.
 
 ---
 

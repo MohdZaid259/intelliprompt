@@ -251,9 +251,8 @@ export const payments = pgTable(
   "payments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    // kept when a user deletes their account (refunds, disputes, tax records)
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     razorpayOrderId: text("razorpay_order_id").notNull().unique(),
     razorpayPaymentId: text("razorpay_payment_id").unique(),
     planKey: text("plan_key").notNull(),

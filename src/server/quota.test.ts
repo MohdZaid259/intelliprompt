@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createTestDb } from "@/server/db/test-db";
 import { usageDaily, users } from "@/server/db/schema";
 import type { Db } from "@/server/db/types";
-import { getUsage, recordCost, releaseQuota, reserveQuota } from "./quota";
+import { getUsage, recordCost, releaseQuota, reserveQuota, today } from "./quota";
 
 let db: Db;
 
@@ -19,7 +19,7 @@ beforeEach(async () => {
 describe("quota", () => {
   it("allows up to the limit and then refuses", async () => {
     const results = [];
-    for (let i = 0; i < 4; i++) results.push(await reserveQuota(db, "u1", "runs", 3));
+    for (let i = 0; i < 4; i++) results.push(!!(await reserveQuota(db, "u1", "runs", 3)));
     expect(results).toEqual([true, true, true, false]);
     expect(await getUsage(db, "u1")).toEqual({ runs: 3, enhances: 0 });
   });
@@ -35,15 +35,24 @@ describe("quota", () => {
   it("counts runs and enhances separately and can give a unit back", async () => {
     await reserveQuota(db, "u1", "runs", 5);
     await reserveQuota(db, "u1", "enhances", 5);
-    await releaseQuota(db, "u1", "runs");
-    await releaseQuota(db, "u1", "runs"); // never goes negative
+    await releaseQuota(db, "u1", "runs", today());
+    await releaseQuota(db, "u1", "runs", today()); // never goes negative
     expect(await getUsage(db, "u1")).toEqual({ runs: 0, enhances: 1 });
+  });
+
+  it("settles on the day the quota was reserved, even after midnight", async () => {
+    const day = (await reserveQuota(db, "u1", "runs", 5))!;
+    await db.update(usageDaily).set({ day: "2000-01-01" });
+    await releaseQuota(db, "u1", "runs", "2000-01-01");
+    const [row] = await db.select().from(usageDaily);
+    expect(row.runs).toBe(0);
+    expect(day).toBe(today());
   });
 
   it("accumulates cost", async () => {
     await reserveQuota(db, "u1", "runs", 5);
-    await recordCost(db, "u1", 0.0015);
-    await recordCost(db, "u1", 0.0005);
+    await recordCost(db, "u1", 0.0015, today());
+    await recordCost(db, "u1", 0.0005, today());
     const [row] = await db.select({ cost: usageDaily.costUsd }).from(usageDaily);
     expect(Number(row.cost)).toBeCloseTo(0.002);
   });

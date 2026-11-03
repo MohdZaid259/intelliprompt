@@ -108,6 +108,7 @@ describe("feed counts and sorting", () => {
     await recordShare(db, BOB, id, "x");
     await addComment(db, CARA, id, "Nice");
     await forkPrompt(db, BOB, id);
+    await forkPrompt(db, BOB, id); // same person forking twice counts once
 
     const [item] = await listPublicPrompts(db);
     expect(item).toMatchObject({ likes: 2, saves: 1, shares: 2, comments: 1, forks: 1 });

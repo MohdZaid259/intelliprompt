@@ -62,7 +62,10 @@ async function Billing() {
           <h2 className="text-lg font-semibold">Payment history</h2>
           <ul className="divide-y rounded-lg border text-sm">
             {history.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-4 p-3">
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 p-3"
+              >
                 <span>{isPassKey(p.planKey) ? PASSES[p.planKey].label : p.planKey}</span>
                 <span className="text-muted-foreground">{dateFmt.format(p.createdAt)}</span>
                 <span className="tabular-nums">{formatRupees(p.amountPaise)}</span>

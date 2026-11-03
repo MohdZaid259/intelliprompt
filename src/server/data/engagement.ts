@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { alias, unionAll } from "drizzle-orm/pg-core";
 import { LEADERBOARD_POINTS } from "@/config/engagement";
 import type { Db } from "@/server/db/types";
@@ -38,8 +38,8 @@ export function liveStreak(
 }
 
 /**
- * Leaderboard: points for engagement others give your public prompts (likes, saves, forks)
- * plus a little for publishing. Self-engagement doesn't count.
+ * Leaderboard: points for engagement other people give your public prompts.
+ * Self-engagement doesn't count, and repeated forks by the same person count once.
  */
 export async function getLeaderboard(db: Db, opts: { since?: Date; limit?: number } = {}) {
   const P = LEADERBOARD_POINTS;
@@ -58,18 +58,15 @@ export async function getLeaderboard(db: Db, opts: { since?: Date; limit?: numbe
       .innerJoin(prompts, eq(prompts.id, saves.promptId))
       .where(and(eq(prompts.visibility, "public"), ne(saves.userId, prompts.ownerId))),
     db
-      .select({ userId: source.ownerId, pts: pts(P.fork), at: prompts.createdAt })
-      .from(prompts)
-      .innerJoin(source, eq(source.id, prompts.forkedFromId))
-      .where(and(eq(source.visibility, "public"), ne(prompts.ownerId, source.ownerId))),
-    db
       .select({
-        userId: prompts.ownerId,
-        pts: pts(P.publish),
-        at: sql<Date>`${prompts.publishedAt}`.as("at"),
+        userId: source.ownerId,
+        pts: pts(P.fork),
+        at: sql<Date>`min(${prompts.createdAt})`.as("at"),
       })
       .from(prompts)
-      .where(and(eq(prompts.visibility, "public"), isNotNull(prompts.publishedAt))),
+      .innerJoin(source, eq(source.id, prompts.forkedFromId))
+      .where(and(eq(source.visibility, "public"), ne(prompts.ownerId, source.ownerId)))
+      .groupBy(source.id, source.ownerId, prompts.ownerId),
   ).as("events");
 
   const points = sql<number>`sum(${events.pts})::int`.mapWith(Number);

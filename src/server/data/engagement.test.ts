@@ -49,20 +49,19 @@ describe("streaks", () => {
 });
 
 describe("leaderboard", () => {
-  it("scores likes, saves, forks and publishing from others, not yourself", async () => {
+  it("scores likes, saves and forks from others, not yourself", async () => {
     const alicePrompt = await publish("a", "Alice's");
     await publish("b", "Bob's");
     await toggleLike(db, "b", alicePrompt); // +3
     await toggleLike(db, "c", alicePrompt); // +3
     await toggleSave(db, "c", alicePrompt); // +2
     await forkPrompt(db, "b", alicePrompt); // +5
+    await forkPrompt(db, "b", alicePrompt); // same person again: 0
     await toggleLike(db, "a", alicePrompt); // self-like: 0
 
     const board = await getLeaderboard(db);
-    expect(board.map((r) => [r.username, r.points])).toEqual([
-      ["alice", 1 + 3 + 3 + 2 + 5],
-      ["bob", 1],
-    ]);
+    // bob published but nobody engaged, so he isn't on the board
+    expect(board.map((r) => [r.username, r.points])).toEqual([["alice", 3 + 3 + 2 + 5]]);
   });
 
   it("only counts recent events for the weekly board", async () => {
