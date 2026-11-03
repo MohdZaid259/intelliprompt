@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
@@ -262,3 +262,11 @@ export const payments = pgTable(
   },
   (t) => [index("payments_user_idx").on(t.userId)],
 );
+
+export const promptsRelations = relations(prompts, ({ many }) => ({
+  versions: many(versions),
+}));
+
+export const versionsRelations = relations(versions, ({ one }) => ({
+  prompt: one(prompts, { fields: [versions.promptId], references: [prompts.id] }),
+}));

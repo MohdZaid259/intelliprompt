@@ -3,19 +3,22 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import { findUserById, upsertUserFromClerk } from "@/server/data/users";
+import type { users } from "@/server/db/schema";
+import { effectivePlan, type PlanKey } from "@/config/plans";
 
 export type SessionUser = {
   id: string;
   username: string;
   name: string;
   avatarUrl: string;
-  plan: "free" | "pro";
+  /** Effective plan: an expired Pro counts as free. */
+  plan: PlanKey;
   role: "user" | "admin";
 };
 
-function toSessionUser(row: SessionUser): SessionUser {
-  const { id, username, name, avatarUrl, plan, role } = row;
-  return { id, username, name, avatarUrl, plan, role };
+function toSessionUser(row: typeof users.$inferSelect): SessionUser {
+  const { id, username, name, avatarUrl, role } = row;
+  return { id, username, name, avatarUrl, role, plan: effectivePlan(row) };
 }
 
 /** The signed-in user, or null. Creates the DB row on first sight if the webhook hasn't yet. */
