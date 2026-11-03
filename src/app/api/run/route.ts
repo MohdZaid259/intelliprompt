@@ -7,6 +7,7 @@ import { getActiveModelIds } from "@/server/ai/models";
 import { runModel } from "@/server/ai/run";
 import { db } from "@/server/db";
 import { getRunnableVersion } from "@/server/data/prompts";
+import { touchStreak } from "@/server/data/engagement";
 import { insertRun } from "@/server/data/runs";
 import { recordCost, releaseQuota, reserveQuota } from "@/server/quota";
 
@@ -69,6 +70,7 @@ export async function POST(req: Request) {
       latencyMs: outcome.latencyMs,
     });
     if (outcome.status === "error") await releaseQuota(db(), user!.id, "runs");
+    else await touchStreak(db(), user!.id);
     await recordCost(db(), user!.id, outcome.costUsd);
 
     return {

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { idSchema } from "@/lib/validation";
 import { db } from "@/server/db";
 import { forkPrompt, publishPrompt, unpublishPrompt } from "@/server/data/community";
+import { touchStreak } from "@/server/data/engagement";
 import {
   addComment,
   deleteComment,
@@ -15,6 +16,7 @@ import {
   toggleLike,
   toggleSave,
 } from "@/server/data/social";
+import { enqueueEmail } from "@/server/email/queue";
 import { promptTag } from "@/server/public-card";
 import { authedAction, UserError } from "./safe-action";
 
@@ -23,8 +25,15 @@ const notPublic = () => new UserError("That prompt isn't public.");
 export const publishAction = authedAction(
   z.object({ promptId: idSchema, versionId: idSchema }),
   async ({ promptId, versionId }, user) => {
-    if (!(await publishPrompt(db(), user.id, promptId, versionId))) {
-      throw new UserError("Couldn't publish that version.");
+    const published = await publishPrompt(db(), user.id, promptId, versionId);
+    if (!published) throw new UserError("Couldn't publish that version.");
+    await touchStreak(db(), user.id);
+    if (published.firstPublish) {
+      // jobId dedupes: followers hear about a prompt once, even if it's unpublished and republished
+      await enqueueEmail(
+        { name: "notify-followers", data: { promptId } },
+        { jobId: `notify-${promptId}` },
+      );
     }
     updateTag(promptTag(promptId));
     refresh();

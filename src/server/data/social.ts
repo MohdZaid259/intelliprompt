@@ -168,7 +168,14 @@ export async function toggleFollow(db: Db, followerId: string, followeeId: strin
 /** Public profile by username, with counts and whether the viewer follows them. */
 export async function getProfile(db: Db, username: string, viewerId: string | null) {
   const [user] = await db
-    .select({ ...publicAuthor, bio: users.bio, createdAt: users.createdAt })
+    .select({
+      ...publicAuthor,
+      bio: users.bio,
+      createdAt: users.createdAt,
+      streakCurrent: users.streakCurrent,
+      streakBest: users.streakBest,
+      lastActiveDay: users.lastActiveDay,
+    })
     .from(users)
     .where(eq(users.username, username));
   if (!user) return null;

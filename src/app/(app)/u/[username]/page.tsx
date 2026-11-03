@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FeedList, FeedSkeletonGrid } from "@/components/community/feed-list";
 import { FollowButton } from "@/components/community/follow-button";
+import { StreakBadge } from "@/components/community/streak-badge";
 import { UserAvatar } from "@/components/community/user-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUser } from "@/server/auth";
 import { db } from "@/server/db";
+import { liveStreak } from "@/server/data/engagement";
 import { getProfile } from "@/server/data/social";
 
 export async function generateMetadata({ params }: PageProps<"/u/[username]">): Promise<Metadata> {
@@ -43,6 +45,7 @@ async function Profile({
             <h1 className="text-2xl font-semibold">{profile.name || `@${profile.username}`}</h1>
             <p className="text-muted-foreground">@{profile.username}</p>
           </div>
+          <StreakBadge days={liveStreak(profile)} />
           {profile.bio && <p className="max-w-prose">{profile.bio}</p>}
           <dl className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <Stat label="published" value={profile.published} />

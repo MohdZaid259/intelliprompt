@@ -67,3 +67,25 @@ export async function deleteUser(db: Db, id: string) {
 export async function findUserById(db: Db, id: string) {
   return db.query.users.findFirst({ where: eq(users.id, id) });
 }
+
+export type Settings = { bio: string; newsletter: boolean; followUpdates: boolean };
+
+export async function getSettings(db: Db, id: string): Promise<Settings | null> {
+  const [row] = await db
+    .select({ bio: users.bio, newsletter: users.newsletter, followUpdates: users.followUpdates })
+    .from(users)
+    .where(eq(users.id, id));
+  return row ?? null;
+}
+
+export async function updateSettings(db: Db, id: string, settings: Settings) {
+  await db.update(users).set(settings).where(eq(users.id, id));
+}
+
+/** Turns off one email list (from an unsubscribe link). */
+export async function unsubscribe(db: Db, id: string, list: "newsletter" | "follows") {
+  await db
+    .update(users)
+    .set(list === "newsletter" ? { newsletter: false } : { followUpdates: false })
+    .where(eq(users.id, id));
+}

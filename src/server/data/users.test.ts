@@ -2,7 +2,15 @@ import { sql } from "drizzle-orm";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createTestDb } from "@/server/db/test-db";
 import type { Db } from "@/server/db/types";
-import { deleteUser, findUserById, upsertUserFromClerk, type ClerkProfile } from "./users";
+import {
+  deleteUser,
+  findUserById,
+  getSettings,
+  unsubscribe,
+  updateSettings,
+  upsertUserFromClerk,
+  type ClerkProfile,
+} from "./users";
 
 let db: Db;
 
@@ -62,5 +70,30 @@ describe("upsertUserFromClerk", () => {
     await upsertUserFromClerk(db, profile());
     await deleteUser(db, "user_1");
     expect(await findUserById(db, "user_1")).toBeUndefined();
+  });
+});
+
+describe("settings", () => {
+  it("reads, updates and unsubscribes", async () => {
+    await upsertUserFromClerk(db, profile());
+    expect(await getSettings(db, "user_1")).toEqual({
+      bio: "",
+      newsletter: false,
+      followUpdates: true,
+    });
+
+    await updateSettings(db, "user_1", {
+      bio: "Prompt nerd",
+      newsletter: true,
+      followUpdates: true,
+    });
+    await unsubscribe(db, "user_1", "follows");
+    expect(await getSettings(db, "user_1")).toEqual({
+      bio: "Prompt nerd",
+      newsletter: true,
+      followUpdates: false,
+    });
+    await unsubscribe(db, "user_1", "newsletter");
+    expect((await getSettings(db, "user_1"))?.newsletter).toBe(false);
   });
 });

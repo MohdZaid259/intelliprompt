@@ -15,6 +15,7 @@ import {
   restoreVersion,
   updatePromptMeta,
 } from "@/server/data/prompts";
+import { touchStreak } from "@/server/data/engagement";
 import { deleteRun, toggleBestRun } from "@/server/data/runs";
 import { promptTag } from "@/server/public-card";
 import { recordCost, releaseQuota, reserveQuota } from "@/server/quota";
@@ -87,6 +88,7 @@ export const enhanceAction = authedAction(
         userId: user.id,
       });
       await recordCost(db(), user.id, result.costUsd);
+      await touchStreak(db(), user.id);
       return { prompt: result.prompt, changes: result.changes };
     } catch (error) {
       await releaseQuota(db(), user.id, "enhances");

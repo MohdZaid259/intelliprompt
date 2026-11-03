@@ -29,10 +29,10 @@ export async function isPublicPrompt(db: Db, promptId: string) {
   return !!row;
 }
 
-/** Makes a prompt public, showing the chosen version. */
+/** Makes a prompt public, showing the chosen version. `firstPublish` is true only the first time. */
 export async function publishPrompt(db: Db, ownerId: string, promptId: string, versionId: string) {
   const [version] = await db
-    .select({ id: versions.id })
+    .select({ id: versions.id, publishedAt: prompts.publishedAt })
     .from(versions)
     .innerJoin(prompts, eq(prompts.id, versions.promptId))
     .where(and(eq(versions.id, versionId), eq(prompts.id, promptId), eq(prompts.ownerId, ownerId)));
@@ -46,8 +46,8 @@ export async function publishPrompt(db: Db, ownerId: string, promptId: string, v
       publishedAt: sql`coalesce(${prompts.publishedAt}, now())`,
     })
     .where(eq(prompts.id, promptId))
-    .returning({ id: prompts.id, publishedAt: prompts.publishedAt });
-  return row;
+    .returning({ id: prompts.id });
+  return { id: row.id, firstPublish: version.publishedAt === null };
 }
 
 export async function unpublishPrompt(db: Db, ownerId: string, promptId: string) {

@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "follow_updates" boolean DEFAULT true NOT NULL;

@@ -9,8 +9,11 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/explore", label: "Explore", private: false },
+  { href: "/leaderboard", label: "Leaderboard", private: false },
+  { href: "/blog", label: "Blog", private: false },
   { href: "/prompts", label: "My prompts", private: true },
   { href: "/saved", label: "Saved", private: true },
+  { href: "/settings", label: "Settings", private: true },
 ];
 
 export function SiteHeader() {

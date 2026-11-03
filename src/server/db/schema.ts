@@ -43,6 +43,8 @@ export const users = pgTable("users", {
   plan: planEnum("plan").notNull().default("free"),
   planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
   newsletter: boolean("newsletter").notNull().default(false),
+  // emails when someone you follow publishes (unsubscribe link in every email)
+  followUpdates: boolean("follow_updates").notNull().default(true),
   streakCurrent: integer("streak_current").notNull().default(0),
   streakBest: integer("streak_best").notNull().default(0),
   lastActiveDay: date("last_active_day"),

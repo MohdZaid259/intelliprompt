@@ -255,3 +255,13 @@ describe("runs on public prompts", () => {
     expect(await deleteRun(db, BOB, visitorRun.id)).not.toBeNull();
   });
 });
+
+describe("first publish", () => {
+  it("is reported only the first time a prompt goes public", async () => {
+    const { id } = await createPrompt(db, ALICE, { title: "T", content: "c", tags: [] });
+    const v1 = (await getOwnedPrompt(db, ALICE, id))!.versions[0].id;
+    expect(await publishPrompt(db, ALICE, id, v1)).toEqual({ id, firstPublish: true });
+    await unpublishPrompt(db, ALICE, id);
+    expect(await publishPrompt(db, ALICE, id, v1)).toEqual({ id, firstPublish: false });
+  });
+});
