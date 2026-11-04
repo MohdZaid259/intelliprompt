@@ -4,7 +4,8 @@ import { z } from "zod";
 const schema = z.object({
   DATABASE_URL: z.url(),
   CLERK_SECRET_KEY: z.string().min(1),
-  CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1),
+  // only the Clerk webhook needs it; locally, users are synced on first sign-in instead
+  CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1).optional(),
 });
 
 let cached: z.infer<typeof schema> | undefined;

@@ -13,7 +13,9 @@ function primaryEmail(data: UserJSON) {
 export async function POST(req: NextRequest) {
   let event;
   try {
-    event = await verifyWebhook(req, { signingSecret: env().CLERK_WEBHOOK_SIGNING_SECRET });
+    const signingSecret = env().CLERK_WEBHOOK_SIGNING_SECRET;
+    if (!signingSecret) return new Response("Webhook not configured", { status: 503 });
+    event = await verifyWebhook(req, { signingSecret });
   } catch {
     return new Response("Invalid signature", { status: 400 });
   }
