@@ -37,8 +37,8 @@ const SCRIPT_END = 25;
 // The main script pauses at PICK_AT while the OpenAI dropdown is opened and a model chosen.
 const PICK_AT = 10.1;
 const PICK = 2.4;
-// After the last frame: show an end card, then replay.
-const END = 3.5;
+// Hold the last frame for a second, then replay.
+const END = 1;
 const LOOP = SCRIPT_END + PICK + END;
 
 /** Real clock to main-script clock (frozen during the dropdown and at the end). */
@@ -301,7 +301,6 @@ export function ProductDemo() {
   const real = reduced ? realTime(17.7) : t;
   const now = scriptTime(real);
   const picking = real >= PICK_AT && real < PICK_AT + PICK;
-  const ended = real >= SCRIPT_END + PICK;
   const [cx, cy, s] = reduced
     ? [600, 360, 1]
     : picking
@@ -346,9 +345,7 @@ export function ProductDemo() {
               <Stage t={now} real={real} />
             </div>
 
-            {ended && !reduced && <EndCard progress={seg(real, SCRIPT_END + PICK, LOOP)} />}
-
-            {!reduced && !ended && (
+            {!reduced && (
               <div
                 className="pointer-events-none absolute z-30"
                 style={{
@@ -404,31 +401,6 @@ export function ProductDemo() {
 }
 
 // ---------- the fake app ----------
-/** Shown for a few seconds after the last frame, so the end is clear before it replays. */
-function EndCard({ progress }: { progress: number }) {
-  return (
-    <div
-      className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-[#0b0613]/85 text-center text-white backdrop-blur-sm"
-      style={{ opacity: Math.min(1, progress * 6) }}
-    >
-      <LogoMark className="size-20 shadow-[0_0_60px_rgb(168_85_247/0.5)]" />
-      <p className="text-[44px] font-black tracking-tight">
-        Rough idea in. <span className="text-purple-400">Proven prompt out.</span>
-      </p>
-      <p className="text-[20px] text-white/60">Write · Enhance · Compare · Share</p>
-      <div className="mt-4 flex items-center gap-3 text-[15px] text-white/50">
-        Replaying
-        <span className="h-1.5 w-48 overflow-hidden rounded-full bg-white/10">
-          <span
-            className="block h-full rounded-full bg-purple-500"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function Stage({ t, real }: { t: number; real: number }) {
   const scene = t < 9.3 ? 0 : t < 19.4 ? 1 : 2;
   return (
