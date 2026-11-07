@@ -42,6 +42,7 @@ Clerk user sync: the app creates a user's row on first sign-in, so the webhook i
 | `npm run db:migrate`                  | Apply migrations to `DATABASE_URL`                               |
 | `npm run db:studio`                   | Browse the database                                              |
 | `npm run worker`                      | Email worker (separate process; deploy it on Railway/Render/Fly) |
+| `OPENROUTER_LIVE_TEST=1 npm test`     | Also run real OpenRouter calls (costs a fraction of a cent)      |
 
 ## Code layout
 
