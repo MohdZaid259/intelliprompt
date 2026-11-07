@@ -1,6 +1,7 @@
 import { ArrowRight, Columns3, History, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ProductDemo } from "./product-demo";
 
 const CHIPS = [
   { icon: Columns3, label: "Side-by-side model runs" },
@@ -53,6 +54,9 @@ export function Hero() {
             </li>
           ))}
         </ul>
+      </div>
+      <div className="mt-16 sm:mt-20">
+        <ProductDemo />
       </div>
     </section>
   );

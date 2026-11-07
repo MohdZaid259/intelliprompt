@@ -4,16 +4,37 @@ import { LandingAccountLink } from "@/components/landing-account-link";
 import { CommunityWall } from "@/components/landing/community-wall";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Hero } from "@/components/landing/hero";
-import { HowItWorks } from "@/components/landing/how-it-works";
+import { Features } from "@/components/landing/features";
+import { ModelStrip } from "@/components/landing/model-strip";
 import { LandingPricing } from "@/components/landing/pricing";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 
-const FOOTER_LINKS = [
-  { href: "/explore", label: "Explore" },
-  { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/blog", label: "Blog" },
-  { href: "/pricing", label: "Pricing" },
+const FOOTER_COLUMNS = [
+  {
+    title: "Product",
+    links: [
+      { href: "#features", label: "Features" },
+      { href: "#pricing", label: "Pricing" },
+      { href: "/explore", label: "Explore" },
+      { href: "/leaderboard", label: "Leaderboard" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { href: "/blog", label: "Blog" },
+      { href: "/pricing", label: "Plans and limits" },
+    ],
+  },
+  {
+    title: "Account",
+    links: [
+      { href: "/sign-up", label: "Create account" },
+      { href: "/sign-in", label: "Sign in" },
+      { href: "/dashboard", label: "Dashboard" },
+    ],
+  },
 ];
 
 // Always dark, whatever the app theme: the `dark` class switches the design tokens.
@@ -30,6 +51,9 @@ export default function LandingPage() {
         <Logo />
         <nav className="flex gap-1">
           <Button asChild variant="ghost" className="hidden sm:inline-flex">
+            <Link href="#features">Features</Link>
+          </Button>
+          <Button asChild variant="ghost" className="hidden sm:inline-flex">
             <Link href="/explore">Explore</Link>
           </Button>
           <Button asChild variant="ghost" className="hidden sm:inline-flex">
@@ -41,7 +65,8 @@ export default function LandingPage() {
 
       <main className="relative z-10 flex-1">
         <Hero />
-        <HowItWorks />
+        <ModelStrip />
+        <Features />
         <Suspense>
           <CommunityWall />
         </Suspense>
@@ -52,16 +77,32 @@ export default function LandingPage() {
       </main>
 
       <footer className="relative z-10 border-t border-purple-500/15">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 p-6 text-sm text-purple-100/50">
-          <Logo />
-          <nav className="flex flex-wrap gap-6">
-            {FOOTER_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-white">
-                {l.label}
-              </Link>
-            ))}
-          </nav>
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div className="space-y-3">
+            <Logo />
+            <p className="max-w-xs text-sm text-purple-100/50">
+              A prompt workbench to enhance, version and test prompts across leading AI models, then
+              share the ones that work.
+            </p>
+          </div>
+          {FOOTER_COLUMNS.map((col) => (
+            <nav key={col.title} aria-label={col.title} className="space-y-3 text-sm">
+              <p className="font-semibold text-white/80">{col.title}</p>
+              <ul className="space-y-2 text-purple-100/50">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="hover:text-white">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
+        <p className="border-t border-purple-500/10 py-5 text-center text-xs text-purple-100/40">
+          IntelliPrompt · Built for people who write prompts every day
+        </p>
       </footer>
     </div>
   );
