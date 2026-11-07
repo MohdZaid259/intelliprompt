@@ -22,6 +22,20 @@ export const openRouterModel: ModelFactory = (key, modelId, fallback) =>
     ...(fallback ? { models: [modelId, fallback] } : {}),
   });
 
+/**
+ * Per-call OpenRouter options. Reasoning models count their hidden thinking against the
+ * token limit, so keep it short ("low") and don't send it back; otherwise a 1,024-token
+ * free-plan answer could be spent mostly on thinking and arrive cut off.
+ */
+export function openRouterOptions(userId?: string) {
+  return {
+    openrouter: {
+      reasoning: { effort: "low" as const, exclude: true },
+      ...(userId ? { user: userId } : {}),
+    },
+  };
+}
+
 /** Errors that mean "this key can't be used right now", so the next key is worth trying. */
 export function isKeyError(error: unknown) {
   return APICallError.isInstance(error) && [401, 402, 403, 429].includes(error.statusCode ?? 0);

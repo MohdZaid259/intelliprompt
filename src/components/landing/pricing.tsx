@@ -116,7 +116,8 @@ export function LandingPricing() {
         </PlanCard>
       </div>
       <p className="mt-10 text-center text-sm text-purple-100/40">
-        One-time payment, no auto-renew · Buying again adds to your remaining time
+        One-time payment, no auto-renew · Buying again adds to your remaining time · Fair-use daily
+        AI budget applies
       </p>
     </section>
   );

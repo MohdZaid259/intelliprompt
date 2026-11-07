@@ -2,7 +2,7 @@ import "server-only";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { ENHANCER_MODEL } from "@/config/models";
-import { costFrom, isKeyError, type ModelFactory } from "./client";
+import { costFrom, isKeyError, openRouterOptions, type ModelFactory } from "./client";
 
 const INSTRUCTIONS = `You are an expert prompt engineer. Rewrite the user's prompt so a language model produces a better answer.
 
@@ -40,7 +40,7 @@ export async function enhancePrompt(
         temperature: 0.4,
         maxOutputTokens: 2048,
         maxRetries: 1,
-        providerOptions: opts.userId ? { openrouter: { user: opts.userId } } : undefined,
+        providerOptions: openRouterOptions(opts.userId),
       });
       return {
         ...result.output,

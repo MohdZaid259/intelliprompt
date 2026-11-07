@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createTestDb } from "@/server/db/test-db";
 import { usageDaily, users } from "@/server/db/schema";
 import type { Db } from "@/server/db/types";
-import { getUsage, recordCost, releaseQuota, reserveQuota, today } from "./quota";
+import { getUsage, recordCost, releaseQuota, reserveQuota, today, withinBudget } from "./quota";
 
 let db: Db;
 
@@ -21,7 +21,7 @@ describe("quota", () => {
     const results = [];
     for (let i = 0; i < 4; i++) results.push(!!(await reserveQuota(db, "u1", "runs", 3)));
     expect(results).toEqual([true, true, true, false]);
-    expect(await getUsage(db, "u1")).toEqual({ runs: 3, enhances: 0 });
+    expect(await getUsage(db, "u1")).toEqual({ runs: 3, enhances: 0, costUsd: 0 });
   });
 
   it("never exceeds the limit under concurrent requests", async () => {
@@ -37,7 +37,7 @@ describe("quota", () => {
     await reserveQuota(db, "u1", "enhances", 5);
     await releaseQuota(db, "u1", "runs", today());
     await releaseQuota(db, "u1", "runs", today()); // never goes negative
-    expect(await getUsage(db, "u1")).toEqual({ runs: 0, enhances: 1 });
+    expect(await getUsage(db, "u1")).toEqual({ runs: 0, enhances: 1, costUsd: 0 });
   });
 
   it("settles on the day the quota was reserved, even after midnight", async () => {
@@ -47,6 +47,15 @@ describe("quota", () => {
     const [row] = await db.select().from(usageDaily);
     expect(row.runs).toBe(0);
     expect(day).toBe(today());
+  });
+
+  it("stops at the daily budget", async () => {
+    expect(await withinBudget(db, "u1", 0.03)).toBe(true);
+    await reserveQuota(db, "u1", "runs", 5);
+    await recordCost(db, "u1", 0.029, today());
+    expect(await withinBudget(db, "u1", 0.03)).toBe(true);
+    await recordCost(db, "u1", 0.002, today());
+    expect(await withinBudget(db, "u1", 0.03)).toBe(false);
   });
 
   it("accumulates cost", async () => {

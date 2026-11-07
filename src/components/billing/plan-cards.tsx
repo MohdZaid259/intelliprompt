@@ -75,7 +75,8 @@ export function PlanCards({
               label={`${currentPlan === "pro" ? "Add" : "Get"} 365 days · ${formatRupees(year.amountPaise)} (save ${yearlySaving}%)`}
             />
             <p className="text-muted-foreground text-center text-xs">
-              One-time payment, no auto-renew. Buying again adds to your remaining time.
+              One-time payment, no auto-renew. Buying again adds to your remaining time. Fair-use
+              daily AI budget applies.
             </p>
           </div>
         </CardContent>

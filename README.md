@@ -41,8 +41,26 @@ Clerk user sync: the app creates a user's row on first sign-in, so the webhook i
 | `npm run db:generate`                 | Create a migration after editing `src/server/db/schema.ts`       |
 | `npm run db:migrate`                  | Apply migrations to `DATABASE_URL`                               |
 | `npm run db:studio`                   | Browse the database                                              |
+| `npm run seed`                        | Publish the starter prompts (official @intelliprompt account)    |
 | `npm run worker`                      | Email worker (separate process; deploy it on Railway/Render/Fly) |
 | `OPENROUTER_LIVE_TEST=1 npm test`     | Also run real OpenRouter calls (costs a fraction of a cent)      |
+
+## Deploy
+
+| Piece                | Where                           | Notes                                                                                                                                          |
+| -------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web app              | Vercel (import the GitHub repo) | Set every variable from `.env.example` in Project → Settings → Environment Variables                                                           |
+| Postgres             | Neon                            | Use the **pooled** connection string as `DATABASE_URL`                                                                                         |
+| Redis + email worker | Railway                         | Add a Redis service, then a service from this repo; `railway.json` makes it run `npm run worker`. Give the worker the same env vars as the app |
+
+Database changes and starter content are applied from your machine against production. Put the production `DATABASE_URL` in a git-ignored `.env.production.local`, then:
+
+```bash
+DATABASE_URL="$(grep -m1 '^DATABASE_URL=' .env.production.local | cut -d= -f2-)" npm run db:migrate
+npm run seed -- --env .env.production.local
+```
+
+The seed publishes curated starter prompts under the official `@intelliprompt` account (skips ones that already exist).
 
 ## Code layout
 

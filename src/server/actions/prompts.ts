@@ -3,7 +3,7 @@
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { PLANS } from "@/config/plans";
+import { BUDGET_MESSAGE, PLANS } from "@/config/plans";
 import { contentSchema, idSchema, LIMITS, tagsSchema, titleSchema } from "@/lib/validation";
 import { enhancePrompt } from "@/server/ai/enhance";
 import { openRouterKeys, openRouterModel } from "@/server/ai/client";
@@ -18,7 +18,7 @@ import {
 import { touchStreak } from "@/server/data/engagement";
 import { deleteRun, toggleBestRun } from "@/server/data/runs";
 import { promptTag } from "@/server/public-card";
-import { recordCost, releaseQuota, reserveQuota } from "@/server/quota";
+import { recordCost, releaseQuota, reserveQuota, withinBudget } from "@/server/quota";
 import { authedAction, UserError } from "./safe-action";
 
 const notFound = () => new UserError("That prompt doesn't exist or isn't yours.");
@@ -77,7 +77,10 @@ export const deletePromptAction = authedAction(
 export const enhanceAction = authedAction(
   z.object({ content: contentSchema }),
   async ({ content }, user) => {
-    const limit = PLANS[user.plan].enhancesPerDay;
+    const plan = PLANS[user.plan];
+    if (!(await withinBudget(db(), user.id, plan.dailyBudgetUsd)))
+      throw new UserError(BUDGET_MESSAGE);
+    const limit = plan.enhancesPerDay;
     const quotaDay = await reserveQuota(db(), user.id, "enhances", limit);
     if (!quotaDay) {
       throw new UserError(`You've used all ${limit} enhancements for today.`);

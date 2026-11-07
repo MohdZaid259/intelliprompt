@@ -1,6 +1,6 @@
 import "server-only";
 import { streamText } from "ai";
-import { costFrom, errorMessage, isKeyError, type ModelFactory } from "./client";
+import { costFrom, errorMessage, isKeyError, openRouterOptions, type ModelFactory } from "./client";
 
 export type RunOutcome = {
   status: "ok" | "error";
@@ -48,7 +48,7 @@ export async function runModel(opts: RunOptions): Promise<RunOutcome> {
       maxOutputTokens: opts.maxTokens,
       maxRetries: 1,
       abortSignal: opts.signal,
-      providerOptions: opts.userId ? { openrouter: { user: opts.userId } } : undefined,
+      providerOptions: openRouterOptions(opts.userId),
     });
 
     for await (const part of result.fullStream) {

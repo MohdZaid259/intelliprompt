@@ -51,6 +51,12 @@ async function Billing() {
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Meter label="Model runs today" used={usage.runs} limit={plan.runsPerDay} />
           <Meter label="Enhancements today" used={usage.enhances} limit={plan.enhancesPerDay} />
+          <Meter
+            label="Fair-use AI budget today"
+            used={Math.min(100, Math.round((usage.costUsd / plan.dailyBudgetUsd) * 100))}
+            limit={100}
+            unit="%"
+          />
           <p className="text-muted-foreground text-xs sm:col-span-2">Limits reset at 00:00 UTC.</p>
         </CardContent>
       </Card>
@@ -81,14 +87,24 @@ async function Billing() {
   );
 }
 
-function Meter({ label, used, limit }: { label: string; used: number; limit: number }) {
+function Meter({
+  label,
+  used,
+  limit,
+  unit,
+}: {
+  label: string;
+  used: number;
+  limit: number;
+  unit?: string;
+}) {
   const pct = Math.min(100, Math.round((used / limit) * 100));
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-sm">
         <span>{label}</span>
         <span className="text-muted-foreground tabular-nums">
-          {used} / {limit}
+          {unit ? `${used}${unit} used` : `${used} / ${limit}`}
         </span>
       </div>
       <div

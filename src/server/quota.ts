@@ -51,5 +51,14 @@ export async function getUsage(db: Db, userId: string) {
   const row = await db.query.usageDaily.findFirst({
     where: and(eq(usageDaily.userId, userId), eq(usageDaily.day, today())),
   });
-  return { runs: row?.runs ?? 0, enhances: row?.enhances ?? 0 };
+  return {
+    runs: row?.runs ?? 0,
+    enhances: row?.enhances ?? 0,
+    costUsd: Number(row?.costUsd ?? 0),
+  };
+}
+
+/** False once today's AI spend reached the plan's budget (checked before each model call). */
+export async function withinBudget(db: Db, userId: string, budgetUsd: number) {
+  return (await getUsage(db, userId)).costUsd < budgetUsd;
 }

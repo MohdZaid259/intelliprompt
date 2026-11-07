@@ -1,5 +1,5 @@
 import { canUseModel, findModel } from "@/config/models";
-import { PLANS } from "@/config/plans";
+import { BUDGET_MESSAGE, PLANS } from "@/config/plans";
 import { runRequestSchema, TRAILER, type RunSummary } from "@/lib/run-protocol";
 import { getUser } from "@/server/auth";
 import { openRouterKeys, openRouterModel } from "@/server/ai/client";
@@ -9,7 +9,7 @@ import { db } from "@/server/db";
 import { getRunnableVersion } from "@/server/data/prompts";
 import { touchStreak } from "@/server/data/engagement";
 import { insertRun } from "@/server/data/runs";
-import { recordCost, releaseQuota, reserveQuota } from "@/server/quota";
+import { recordCost, releaseQuota, reserveQuota, withinBudget } from "@/server/quota";
 import { checkRateLimit, rateLimitMessage } from "@/server/rate-limit";
 
 const fail = (status: number, error: string) => Response.json({ error }, { status });
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
   const version = await getRunnableVersion(db(), user.id, versionId);
   if (!version) return fail(404, "Prompt not found.");
 
+  if (!(await withinBudget(db(), user.id, plan.dailyBudgetUsd))) return fail(429, BUDGET_MESSAGE);
   const quotaDay = await reserveQuota(db(), user.id, "runs", plan.runsPerDay);
   if (!quotaDay) return fail(429, `You've used all ${plan.runsPerDay} runs for today.`);
 

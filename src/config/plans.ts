@@ -1,9 +1,25 @@
 // Single source of truth for plan limits and prices. The server never takes a price from the client.
 export type PlanKey = "free" | "pro";
 
+// dailyBudgetUsd caps what one user's AI calls can cost per day (model prices vary ~100x,
+// so run counts alone don't bound cost). Pro's cap keeps a heavy user under the pass price.
 export const PLANS = {
-  free: { label: "Free", runsPerDay: 20, enhancesPerDay: 5, maxTokens: 1024, modelTier: "free" },
-  pro: { label: "Pro", runsPerDay: 300, enhancesPerDay: 100, maxTokens: 4096, modelTier: "pro" },
+  free: {
+    label: "Free",
+    runsPerDay: 20,
+    enhancesPerDay: 5,
+    maxTokens: 2048,
+    modelTier: "free",
+    dailyBudgetUsd: 0.03,
+  },
+  pro: {
+    label: "Pro",
+    runsPerDay: 300,
+    enhancesPerDay: 100,
+    maxTokens: 4096,
+    modelTier: "pro",
+    dailyBudgetUsd: 0.15,
+  },
 } as const satisfies Record<
   PlanKey,
   {
@@ -12,8 +28,11 @@ export const PLANS = {
     enhancesPerDay: number;
     maxTokens: number;
     modelTier: "free" | "pro";
+    dailyBudgetUsd: number;
   }
 >;
+
+export const BUDGET_MESSAGE = "You've reached today's fair-use AI budget. It resets at 00:00 UTC.";
 
 /** Pro only counts while it hasn't expired. */
 export function effectivePlan(user: { plan: PlanKey; planExpiresAt: Date | null }): PlanKey {

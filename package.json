@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "worker": "tsx worker/email.ts"
+    "worker": "tsx worker/email.ts",
+    "seed": "tsx scripts/seed-starters.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.23",
