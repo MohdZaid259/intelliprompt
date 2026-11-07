@@ -40,7 +40,7 @@ const FOOTER_COLUMNS = [
 // Always dark, whatever the app theme: the `dark` class switches the design tokens.
 export default function LandingPage() {
   return (
-    <div className="dark font-landing relative flex flex-1 flex-col overflow-x-hidden bg-[#0b0613] text-white">
+    <div className="dark relative flex flex-1 flex-col overflow-x-hidden bg-[#0b0613] text-white">
       <div aria-hidden className="bg-dots pointer-events-none absolute inset-0 opacity-60" />
       <div
         aria-hidden
@@ -80,15 +80,14 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
           <div className="space-y-3">
             <Logo />
-            <p className="max-w-xs text-sm text-purple-100/50">
-              A prompt workbench to enhance, version and test prompts across leading AI models, then
-              share the ones that work.
+            <p className="max-w-xs text-sm text-white/50">
+              Enhance, test and share prompts across leading AI models.
             </p>
           </div>
           {FOOTER_COLUMNS.map((col) => (
             <nav key={col.title} aria-label={col.title} className="space-y-3 text-sm">
-              <p className="font-semibold text-white/80">{col.title}</p>
-              <ul className="space-y-2 text-purple-100/50">
+              <p className="font-medium text-white/80">{col.title}</p>
+              <ul className="space-y-2 text-white/50">
                 {col.links.map((l) => (
                   <li key={l.label}>
                     <Link href={l.href} className="hover:text-white">
@@ -100,8 +99,8 @@ export default function LandingPage() {
             </nav>
           ))}
         </div>
-        <p className="border-t border-purple-500/10 py-5 text-center text-xs text-purple-100/40">
-          IntelliPrompt · Built for people who write prompts every day
+        <p className="border-t border-white/5 py-5 text-center text-xs text-white/40">
+          © IntelliPrompt
         </p>
       </footer>
     </div>

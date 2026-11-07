@@ -140,7 +140,7 @@ export function ComparePanel({
           <label className="w-56 space-y-2 text-sm">
             <span className="flex justify-between">
               Temperature{" "}
-              <span className="text-muted-foreground font-mono">{temperature.toFixed(1)}</span>
+              <span className="text-muted-foreground tabular-nums">{temperature.toFixed(1)}</span>
             </span>
             <Slider
               min={0}

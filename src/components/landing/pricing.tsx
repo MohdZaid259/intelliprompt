@@ -39,12 +39,12 @@ export function LandingPricing() {
   );
 
   return (
-    <section id="pricing" className="px-4 py-24">
+    <section id="pricing" className="px-4 py-20 sm:py-28">
       <SectionHeading
         eyebrow="Pricing"
-        title="Simple plans"
-        accent="for every need"
-        subtitle="Start free. Upgrade when you need more runs and the strongest models."
+        title="Simple"
+        accent="pricing"
+        subtitle="Start free. Upgrade for more runs and the strongest models."
       />
 
       <div className="mt-8 flex items-center justify-center gap-3 text-sm">
@@ -115,9 +115,8 @@ export function LandingPricing() {
           />
         </PlanCard>
       </div>
-      <p className="mt-10 text-center text-sm text-purple-100/40">
-        One-time payment, no auto-renew · Buying again adds to your remaining time · Fair-use daily
-        AI budget applies
+      <p className="mt-10 text-center text-sm text-white/40">
+        One-time payment, no auto-renew. Fair-use daily AI budget applies.
       </p>
     </section>
   );
@@ -154,7 +153,7 @@ function PlanCard({
       )}
     >
       {highlight && (
-        <span className="absolute top-5 right-5 rounded-full bg-purple-500 px-3 py-1 text-[11px] font-bold tracking-wider text-white uppercase">
+        <span className="absolute top-5 right-5 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-medium text-purple-200">
           Most popular
         </span>
       )}
@@ -163,22 +162,20 @@ function PlanCard({
           <Icon className={cn("size-5", highlight ? "text-yellow-400" : "text-purple-300")} />
         </span>
         <span>
-          <span className="block text-[11px] font-semibold tracking-wider text-purple-400 uppercase">
-            {eyebrow}
-          </span>
+          <span className="block text-xs font-medium text-purple-300">{eyebrow}</span>
           <span className="block font-semibold text-white">{name}</span>
         </span>
       </div>
       <div>
         <p className="flex items-baseline gap-2">
-          <span className="text-4xl font-black text-white">{price}</span>
+          <span className="text-4xl font-semibold tracking-tight text-white">{price}</span>
           <span className="text-sm text-purple-100/50">{note}</span>
         </p>
-        <p className="mt-1 text-sm text-purple-100/60">{blurb}</p>
+        <p className="mt-1 text-sm text-white/60">{blurb}</p>
       </div>
       <ul className="space-y-2.5 border-t border-purple-500/15 pt-5">
         {features.map((f) => (
-          <li key={f} className="flex gap-2.5 text-sm text-purple-100/75">
+          <li key={f} className="flex gap-2.5 text-sm text-white/70">
             <Check className="mt-0.5 size-4 shrink-0 text-purple-400" /> {f}
           </li>
         ))}

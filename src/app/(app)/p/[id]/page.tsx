@@ -139,7 +139,7 @@ async function PublicPrompt({ params }: { params: PageProps<"/p/[id]">["params"]
           <CopyButton text={prompt.content} label="Copy prompt" />
         </CardHeader>
         <CardContent>
-          <pre className="bg-muted/50 overflow-x-auto rounded-md p-4 font-mono text-sm whitespace-pre-wrap">
+          <pre className="bg-muted/50 overflow-x-auto rounded-md p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap">
             {prompt.content}
           </pre>
         </CardContent>

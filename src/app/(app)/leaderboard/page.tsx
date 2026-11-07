@@ -78,7 +78,7 @@ async function Board({
             const streak = liveStreak(r);
             return (
               <li key={r.id} className="flex items-center gap-4 p-3">
-                <span className="text-muted-foreground w-6 text-right font-mono text-sm">
+                <span className="text-muted-foreground w-6 text-right text-sm tabular-nums">
                   {i + 1}
                 </span>
                 <Link href={`/u/${r.username}`} className="flex min-w-0 flex-1 items-center gap-3">

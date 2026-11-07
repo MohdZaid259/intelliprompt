@@ -33,7 +33,7 @@ export function PromptCard({
 
       <Link href={`/p/${item.id}`} className="group space-y-2">
         <h2 className="font-semibold group-hover:underline">{item.title}</h2>
-        <p className="text-muted-foreground line-clamp-3 font-mono text-xs whitespace-pre-wrap">
+        <p className="text-muted-foreground line-clamp-3 text-xs whitespace-pre-wrap">
           {item.preview}
         </p>
       </Link>

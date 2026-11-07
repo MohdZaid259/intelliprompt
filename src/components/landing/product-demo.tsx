@@ -206,6 +206,8 @@ function useFitScale(
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // measure now too: ResizeObserver only reports on the next rendering pass
+    setScale(el.clientWidth / W);
     const ro = new ResizeObserver(([entry]) => setScale(entry.contentRect.width / W));
     ro.observe(el);
     return () => ro.disconnect();
@@ -457,7 +459,7 @@ function Sidebar({ scene }: { scene: number }) {
   ];
   return (
     <div className="flex w-[200px] shrink-0 flex-col gap-1 border-r border-white/10 bg-[#120c1c] p-3 text-[13px]">
-      <div className="mb-4 flex items-center gap-2 px-1 pt-1 font-mono text-[15px] font-bold">
+      <div className="mb-4 flex items-center gap-2 px-1 pt-1 text-[15px] font-semibold tracking-tight">
         <LogoMark className="size-6" /> IntelliPrompt
       </div>
       <p className="px-2 text-[11px] text-white/40">Main</p>
@@ -520,7 +522,7 @@ function EditorScene({ t }: { t: number }) {
           </div>
           <div
             className={cn(
-              "flex-1 rounded-lg border bg-white/[0.03] p-4 font-mono text-[14px] leading-relaxed",
+              "flex-1 rounded-lg border bg-white/[0.03] p-4 text-[14px] leading-relaxed",
               t > 1 && t < 3.6 ? "border-purple-400/60" : "border-white/10",
               replaced && t < 9 && "border-emerald-400/60",
             )}
@@ -795,7 +797,7 @@ function ExploreScene({ t }: { t: number }) {
           >
             <p className="text-[11px] text-white/50">{c.by}</p>
             <p className="mt-1 text-[15px] font-semibold">{c.title}</p>
-            <p className="mt-2 font-mono text-[12px] leading-relaxed text-white/60">{c.text}</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-white/60">{c.text}</p>
             <div className="mt-3 flex gap-1.5">
               {c.tags.map((tag) => (
                 <span key={tag} className="rounded-md bg-white/10 px-2 py-0.5 text-[11px]">

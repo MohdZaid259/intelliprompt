@@ -1,35 +1,28 @@
-import { ArrowRight, Columns3, History, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LightRays } from "./light-rays";
 import { ProductDemo } from "./product-demo";
-
-const CHIPS = [
-  { icon: Columns3, label: "Side-by-side model runs" },
-  { icon: Sparkles, label: "One-click prompt enhance" },
-  { icon: History, label: "Full version history" },
-];
 
 export function Hero() {
   return (
-    <section className="relative px-4 pt-20 pb-24 text-center sm:pt-28">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-sm text-purple-200">
-          <Sparkles className="size-4 text-purple-300" /> AI-powered prompt workbench
-        </p>
-        <h1 className="text-5xl leading-[1.05] font-black tracking-tight sm:text-7xl">
-          <span className="text-gradient">Your prompts, upgraded.</span>
-          <br />
-          <span className="text-gradient-accent">Proven across models.</span>
+    <section className="relative px-4 pt-16 pb-20 text-center sm:pt-24">
+      <LightRays />
+      <div className="relative mx-auto max-w-3xl space-y-6">
+        <p className="text-sm font-medium text-purple-300">AI prompt workbench</p>
+        <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight sm:text-6xl">
+          <span className="text-gradient">Better prompts,</span>{" "}
+          <span className="text-gradient-accent">proven across models</span>
         </h1>
-        <p className="mx-auto max-w-2xl text-lg text-purple-100/70">
-          Enhance a rough prompt in one click, run it on several LLMs side by side, keep the version
-          that wins, and share it with a community that does the same — all in one place.
+        <p className="mx-auto max-w-xl text-base text-white/60 sm:text-lg">
+          Enhance a rough prompt, compare answers from leading models side by side, and keep the
+          version that wins.
         </p>
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3 pt-2">
           <Button
             asChild
             size="lg"
-            className="h-12 bg-gradient-to-r from-purple-500 to-violet-600 px-6 text-base shadow-[0_0_30px_rgb(168_85_247/0.45)] hover:from-purple-400 hover:to-violet-500"
+            className="h-11 bg-purple-600 px-6 text-white shadow-[0_0_30px_rgb(168_85_247/0.35)] hover:bg-purple-500"
           >
             <Link href="/prompts">
               Get started free <ArrowRight />
@@ -39,23 +32,13 @@ export function Hero() {
             asChild
             size="lg"
             variant="outline"
-            className="h-12 border-purple-500/30 bg-white/5 px-6 text-base hover:bg-white/10"
+            className="h-11 border-white/15 bg-white/5 px-6 hover:bg-white/10"
           >
             <Link href="/explore">Explore prompts</Link>
           </Button>
         </div>
-        <ul className="flex flex-wrap justify-center gap-3">
-          {CHIPS.map(({ icon: Icon, label }) => (
-            <li
-              key={label}
-              className="inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/5 px-4 py-2 text-sm text-purple-100/80"
-            >
-              <Icon className="size-4 text-purple-300" /> {label}
-            </li>
-          ))}
-        </ul>
       </div>
-      <div className="mt-16 sm:mt-20">
+      <div className="relative mt-14 sm:mt-16">
         <ProductDemo />
       </div>
     </section>

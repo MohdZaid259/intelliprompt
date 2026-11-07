@@ -36,7 +36,7 @@ export function Logo() {
   return (
     <Link
       href="/"
-      className="text-primary dark:text-foreground flex items-center gap-2 font-mono text-lg font-bold tracking-wide select-none"
+      className="text-foreground flex items-center gap-2 text-lg font-semibold tracking-tight select-none"
     >
       <LogoMark className="shadow-primary/30 rounded-md shadow-lg" />
       IntelliPrompt
