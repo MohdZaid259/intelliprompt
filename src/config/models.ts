@@ -79,6 +79,19 @@ export const MODELS: ModelInfo[] = [
   { id: "mistralai/mistral-large-4-0", label: "Mistral Large 4", provider: "Mistral", tier: "pro" },
 ];
 
+/** Provider cards in the model picker, in display order (v1 style). */
+export const PROVIDERS: { name: string; description: string; comingSoon?: boolean }[] = [
+  { name: "OpenAI", description: "Reliable & versatile" },
+  { name: "Anthropic", description: "Careful & creative" },
+  { name: "Google", description: "Fast reasoning" },
+  { name: "Meta", description: "Open research" },
+  { name: "DeepSeek", description: "Advanced reasoning" },
+  { name: "Qwen", description: "Efficient processing" },
+  { name: "Mistral", description: "Open-source power" },
+  { name: "xAI", description: "Bold & current" },
+  { name: "Perplexity", description: "Real-time search", comingSoon: true },
+];
+
 export const ENHANCER_MODEL = { id: "anthropic/claude-haiku-5.5", fallback: "openai/gpt-6-luna" };
 
 export function findModel(id: string) {

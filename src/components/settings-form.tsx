@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { SoonBadge } from "@/components/soon-badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateSettingsAction } from "@/server/actions/account";
@@ -36,6 +37,15 @@ export function SettingsForm({ initial }: { initial: Settings }) {
         />
         <p className="text-muted-foreground text-xs">
           Shown on your public profile. {160 - settings.bio.length} characters left.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          Social links <SoonBadge />
+        </Label>
+        <p className="text-muted-foreground text-xs">
+          Add your website, X and GitHub to your profile.
         </p>
       </div>
 

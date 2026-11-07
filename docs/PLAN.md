@@ -3,7 +3,7 @@
 > Status: plan agreed 2026-11-03; MVP built 2026-11-07
 > Decisions locked: Postgres + Drizzle · fresh rebuild (reuse UI) · one paid OpenRouter key + daily quota · Pro plan in MVP · no direct messages · MVP also includes leaderboard, streaks, blog, newsletter, BullMQ email queue + worker, saves/shares, comment likes
 
-> Progress: Milestones 0–5 are done. Live at https://intelliprompt.vercel.app (Vercel + Neon + Railway, Razorpay in test mode).
+> Progress: Milestones 0–5 are done, plus the v1-style app shell (sidebar, folders, dashboard, library). Live at https://intelliprompt.vercel.app (Vercel + Neon + Railway, Razorpay in test mode).
 
 ---
 
@@ -31,7 +31,9 @@ Anything that doesn't serve this loop is out of the MVP.
 
 ### Out of MVP
 
-Direct messages · folders (tags + search instead) · BYOK (later) · teams.
+Direct messages · BYOK (later) · teams.
+
+Coming soon (shown in the UI with a chip): favorite prompts and versions · Perplexity · profile social links.
 
 ---
 
@@ -105,7 +107,10 @@ users        id (clerk id, pk) · username (unique) · name · avatar_url · bio
              plan ('free'|'pro') · plan_expires_at · role ('user'|'admin') · newsletter bool
              streak_current · streak_best · last_active_day (date) · created_at
 
-prompts      id · owner_id → users · title · tags text[] · visibility ('private'|'public')
+folders      id · owner_id → users · name (unique per owner, 1..60) · created_at   (max 50 per user)
+
+prompts      id · owner_id → users · folder_id → folders (nullable, set null on delete)
+             title · tags text[] · visibility ('private'|'public')
              best_version_id → versions (nullable) · forked_from_id → prompts (nullable)
              published_at · created_at · updated_at
              idx: (owner_id), (visibility, published_at), gin(tags)

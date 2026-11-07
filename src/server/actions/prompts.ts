@@ -24,7 +24,12 @@ import { authedAction, UserError } from "./safe-action";
 const notFound = () => new UserError("That prompt doesn't exist or isn't yours.");
 
 export const createPromptAction = authedAction(
-  z.object({ title: titleSchema, content: contentSchema, tags: tagsSchema }),
+  z.object({
+    title: titleSchema,
+    content: contentSchema,
+    tags: tagsSchema,
+    folderId: idSchema.nullable().optional(),
+  }),
   async (input, user) => {
     const { id } = await createPrompt(db(), user.id, input);
     redirect(`/prompts/${id}`);
@@ -66,11 +71,13 @@ export const updatePromptMetaAction = authedAction(
 );
 
 export const deletePromptAction = authedAction(
-  z.object({ promptId: idSchema }),
-  async ({ promptId }, user) => {
+  // stay: deleting from a list refreshes it instead of leaving the page
+  z.object({ promptId: idSchema, stay: z.boolean().optional() }),
+  async ({ promptId, stay }, user) => {
     if (!(await deletePrompt(db(), user.id, promptId))) throw notFound();
     updateTag(promptTag(promptId));
-    redirect("/prompts");
+    if (stay) refresh();
+    else redirect("/prompts");
   },
 );
 

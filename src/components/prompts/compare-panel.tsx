@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Play } from "lucide-react";
+import { FlaskConical, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { parseRunStream, type RunRequest, type RunSummary } from "@/lib/run-protocol";
-import { cn } from "@/lib/utils";
+import { ModelPicker, type ModelSelection } from "./model-picker";
 import { RunCard } from "./run-card";
 import type { WorkspaceLimits, WorkspaceModel, WorkspaceRun } from "./types";
 
@@ -69,17 +69,13 @@ export function ComparePanel({
   canMarkBest?: boolean;
 }) {
   const router = useRouter();
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selection, setSelection] = useState<ModelSelection>({});
+  const selected = Object.values(selection);
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(Math.min(1024, limits.maxTokens));
   const [live, setLive] = useState<LiveRun[]>([]);
   const running = live.some((r) => !r.savedId && !r.error);
   const remaining = limits.runsPerDay - limits.runsUsed;
-
-  const toggle = (id: string) =>
-    setSelected((s) =>
-      s.includes(id) ? s.filter((m) => m !== id) : s.length < MAX_MODELS ? [...s, id] : s,
-    );
 
   const update = (key: string, patch: Partial<LiveRun>) =>
     setLive((all) => all.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -112,14 +108,16 @@ export function ComparePanel({
   // Once a live run is saved and the server list includes it, show the saved card instead.
   const savedIds = new Set(runs.map((r) => r.id));
   const visibleLive = live.filter((r) => !(r.savedId && savedIds.has(r.savedId)));
-  const providers = [...new Set(models.map((m) => m.provider))];
 
   return (
-    <Card>
+    <Card className="gap-5">
       <CardHeader>
-        <CardTitle>Compare models</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <FlaskConical className="text-primary size-5" /> AI model testing
+        </CardTitle>
         <CardDescription>
-          Pick up to {MAX_MODELS} models. {remaining} of {limits.runsPerDay} runs left today.
+          Run this version on up to {MAX_MODELS} models and compare. {remaining} of{" "}
+          {limits.runsPerDay} runs left today.
           {models.some((m) => m.locked) && (
             <>
               {" "}
@@ -131,40 +129,14 @@ export function ComparePanel({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-3">
-          {providers.map((provider) => (
-            <div key={provider} className="flex flex-wrap items-center gap-2">
-              <span className="text-muted-foreground w-20 text-xs">{provider}</span>
-              {models
-                .filter((m) => m.provider === provider)
-                .map((m) => {
-                  const active = selected.includes(m.id);
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      disabled={m.locked}
-                      aria-pressed={active}
-                      onClick={() => toggle(m.id)}
-                      title={m.locked ? "Available on Pro" : undefined}
-                      className={cn(
-                        "rounded-full border px-3 py-1 text-xs transition-colors",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "hover:bg-accent",
-                        m.locked && "cursor-not-allowed opacity-50",
-                      )}
-                    >
-                      {m.locked && <Lock className="mr-1 inline size-3" />}
-                      {m.label}
-                    </button>
-                  );
-                })}
-            </div>
-          ))}
-        </div>
+        <ModelPicker
+          models={models}
+          selection={selection}
+          onChange={setSelection}
+          max={MAX_MODELS}
+        />
 
-        <div className="flex flex-wrap items-end gap-6">
+        <div className="bg-muted/30 flex flex-wrap items-end gap-6 rounded-xl border p-4">
           <label className="w-56 space-y-2 text-sm">
             <span className="flex justify-between">
               Temperature{" "}

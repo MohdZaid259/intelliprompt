@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { idSchema } from "@/lib/validation";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
+import { listFolders } from "@/server/data/folders";
 import { getOwnedPrompt } from "@/server/data/prompts";
 import { listRunsForVersions } from "@/server/data/runs";
 import { getRunContext } from "@/server/run-context";
@@ -25,13 +26,14 @@ async function Workspace({ params }: { params: PageProps<"/prompts/[id]">["param
   const prompt = await getOwnedPrompt(db(), user.id, id);
   if (!prompt) notFound();
 
-  const [runs, { models, limits }] = await Promise.all([
+  const [runs, { models, limits }, folders] = await Promise.all([
     listRunsForVersions(
       db(),
       user.id,
       prompt.versions.map((v) => v.id),
     ),
     getRunContext(user),
+    listFolders(db(), user.id),
   ]);
 
   return (
@@ -42,7 +44,9 @@ async function Workspace({ params }: { params: PageProps<"/prompts/[id]">["param
         tags: prompt.tags,
         visibility: prompt.visibility,
         publishedVersionId: prompt.bestVersionId,
+        folderId: prompt.folderId,
       }}
+      folders={folders.map((f) => ({ id: f.id, name: f.name }))}
       versions={prompt.versions}
       runs={runs}
       models={models}

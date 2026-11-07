@@ -3,6 +3,9 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // Optimistic gate only; every server action and data function still calls requireUser().
 const isPrivateRoute = createRouteMatcher([
   "/prompts(.*)",
+  "/folders(.*)",
+  "/dashboard(.*)",
+  "/library(.*)",
   "/saved(.*)",
   "/settings(.*)",
   "/billing(.*)",

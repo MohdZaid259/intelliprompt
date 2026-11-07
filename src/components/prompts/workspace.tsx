@@ -4,7 +4,9 @@ import { useState } from "react";
 import { ComparePanel } from "./compare-panel";
 import { PromptHeader } from "./prompt-header";
 import { PublishControl } from "./publish-control";
+import { PageCrumbs } from "@/components/shell/breadcrumbs";
 import type {
+  WorkspaceFolder,
   WorkspaceLimits,
   WorkspaceModel,
   WorkspacePrompt,
@@ -20,8 +22,10 @@ export function PromptWorkspace({
   runs,
   models,
   limits,
+  folders,
 }: {
   prompt: WorkspacePrompt;
+  folders: WorkspaceFolder[];
   versions: WorkspaceVersion[]; // newest first
   runs: WorkspaceRun[];
   models: WorkspaceModel[];
@@ -42,7 +46,8 @@ export function PromptWorkspace({
     <div className="space-y-6">
       {/* private page, so the tab title is set here rather than in metadata */}
       <title>{`${prompt.title} · IntelliPrompt`}</title>
-      <PromptHeader prompt={prompt} />
+      <PageCrumbs items={crumbs(prompt, folders)} />
+      <PromptHeader prompt={prompt} folders={folders} />
       <PublishControl prompt={prompt} selected={selected} versions={versions} />
       <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
         <div className="min-w-0 space-y-6">
@@ -53,15 +58,8 @@ export function PromptWorkspace({
             latest={latest}
             onSaved={() => setFollowLatest(true)}
           />
-          <ComparePanel
-            key={`runs-${selected.id}`}
-            versionId={selected.id}
-            models={models}
-            runs={runs.filter((r) => r.versionId === selected.id)}
-            limits={limits}
-          />
         </div>
-        <aside className="order-first lg:order-none">
+        <aside id="versions" className="order-first scroll-mt-20 lg:order-none">
           <VersionList
             versions={versions}
             selectedId={selected.id}
@@ -70,6 +68,24 @@ export function PromptWorkspace({
           />
         </aside>
       </div>
+      <ComparePanel
+        key={`runs-${selected.id}`}
+        versionId={selected.id}
+        models={models}
+        runs={runs.filter((r) => r.versionId === selected.id)}
+        limits={limits}
+      />
     </div>
   );
+}
+
+function crumbs(prompt: WorkspacePrompt, folders: WorkspaceFolder[]) {
+  const folder = folders.find((f) => f.id === prompt.folderId);
+  return [
+    folder ? { label: "Folders", href: "/folders" } : { label: "Prompts", href: "/prompts" },
+    folder
+      ? { label: folder.name, href: `/folders/${folder.id}` }
+      : { label: "Unsorted", href: "/folders/unsorted" },
+    { label: prompt.title },
+  ];
 }

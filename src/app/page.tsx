@@ -19,7 +19,7 @@ const FOOTER_LINKS = [
 // Always dark, whatever the app theme: the `dark` class switches the design tokens.
 export default function LandingPage() {
   return (
-    <div className="dark relative flex flex-1 flex-col overflow-x-hidden bg-[#0b0613] text-white">
+    <div className="dark font-landing relative flex flex-1 flex-col overflow-x-hidden bg-[#0b0613] text-white">
       <div aria-hidden className="bg-dots pointer-events-none absolute inset-0 opacity-60" />
       <div
         aria-hidden

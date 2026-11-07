@@ -51,6 +51,23 @@ export const users = pgTable("users", {
   createdAt: createdAt(),
 });
 
+/** A user's own grouping of prompts. Deleting a folder keeps its prompts (they become unsorted). */
+export const folders = pgTable(
+  "folders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("folders_owner_name_uq").on(t.ownerId, t.name),
+    check("folders_name_len", sql`char_length(${t.name}) between 1 and 60`),
+  ],
+);
+
 export const prompts = pgTable(
   "prompts",
   {
@@ -58,6 +75,8 @@ export const prompts = pgTable(
     ownerId: text("owner_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    // ownership of the folder is checked in the data layer
+    folderId: uuid("folder_id").references(() => folders.id, { onDelete: "set null" }),
     title: text("title").notNull(),
     tags: text("tags")
       .array()
@@ -79,6 +98,7 @@ export const prompts = pgTable(
   },
   (t) => [
     index("prompts_owner_idx").on(t.ownerId),
+    index("prompts_folder_idx").on(t.folderId),
     index("prompts_public_feed_idx").on(t.visibility, t.publishedAt),
     index("prompts_tags_idx").using("gin", t.tags),
   ],

@@ -7,7 +7,10 @@ export type WorkspacePrompt = {
   visibility: "private" | "public";
   /** The version shown publicly (set when published). */
   publishedVersionId: string | null;
+  folderId: string | null;
 };
+
+export type WorkspaceFolder = { id: string; name: string };
 
 export type WorkspaceVersion = {
   id: string;

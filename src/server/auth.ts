@@ -1,6 +1,7 @@
 import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { db } from "@/server/db";
 import { findUserById, upsertUserFromClerk } from "@/server/data/users";
 import type { users } from "@/server/db/schema";
@@ -21,8 +22,11 @@ function toSessionUser(row: typeof users.$inferSelect): SessionUser {
   return { id, username, name, avatarUrl, role, plan: effectivePlan(row) };
 }
 
-/** The signed-in user, or null. Creates the DB row on first sight if the webhook hasn't yet. */
-export async function getUser(): Promise<SessionUser | null> {
+/**
+ * The signed-in user, or null. Creates the DB row on first sight if the webhook hasn't yet.
+ * Cached per request, so the shell and the page share one lookup.
+ */
+export const getUser = cache(async function getUser(): Promise<SessionUser | null> {
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -40,7 +44,7 @@ export async function getUser(): Promise<SessionUser | null> {
     imageUrl: clerkUser.imageUrl,
   });
   return toSessionUser(created);
-}
+});
 
 /** Use in every server action / private page. Redirects to sign-in when signed out. */
 export async function requireUser(): Promise<SessionUser> {

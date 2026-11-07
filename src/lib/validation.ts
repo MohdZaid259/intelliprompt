@@ -28,3 +28,9 @@ export const tagsSchema = z
   .transform((tags) => [...new Set(tags)]);
 
 export const idSchema = z.uuid("Invalid id");
+
+export const folderNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Give the folder a name")
+  .max(60, "Folder names can be at most 60 characters");

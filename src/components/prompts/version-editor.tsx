@@ -5,10 +5,8 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { LIMITS } from "@/lib/validation";
 import { restoreVersionAction, saveVersionAction } from "@/server/actions/prompts";
-import { EnhanceButton } from "./enhance-button";
+import { PromptEditor } from "./prompt-editor";
 import type { WorkspaceVersion } from "./types";
 import { VersionDiff } from "./version-diff";
 
@@ -78,28 +76,27 @@ export function VersionEditor({
             <VersionDiff before={version.content} after={latest.content} />
           </div>
         )}
-        <Textarea
+        <PromptEditor
           value={draft}
-          onChange={(e) => {
-            setDraft(e.target.value);
+          onChange={(v) => {
+            setDraft(v);
             setSource("manual");
           }}
-          maxLength={LIMITS.content}
-          className="min-h-48 font-mono text-sm"
-          aria-label="Prompt"
+          onEnhanced={(enhanced) => {
+            setDraft(enhanced);
+            setSource("enhanced");
+          }}
         />
-        <div className="flex flex-wrap items-start gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button onClick={save} disabled={pending || unchanged || !draft.trim()}>
             {pending ? <Loader2 className="animate-spin" /> : <Save />}
             Save as v{latest.number + 1}
           </Button>
-          <EnhanceButton
-            content={draft}
-            onAccept={(enhanced) => {
-              setDraft(enhanced);
-              setSource("enhanced");
-            }}
-          />
+          {!unchanged && (
+            <Button variant="ghost" onClick={() => setDraft(version.content)} disabled={pending}>
+              Reset
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

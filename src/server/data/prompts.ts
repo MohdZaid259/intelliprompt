@@ -1,39 +1,72 @@
 import "server-only";
-import { and, count, desc, eq, max, or } from "drizzle-orm";
+import { and, count, desc, eq, isNull, max, or, sql } from "drizzle-orm";
 import type { Db } from "@/server/db/types";
-import { prompts, versions } from "@/server/db/schema";
+import { folders, prompts, versions } from "@/server/db/schema";
+import { getOwnedFolder } from "./folders";
 
 type VersionSource = (typeof versions.$inferInsert)["source"];
 
-export type PromptInput = { title: string; content: string; tags: string[] };
+export type PromptInput = {
+  title: string;
+  content: string;
+  tags: string[];
+  folderId?: string | null;
+};
 
 export async function createPrompt(db: Db, ownerId: string, input: PromptInput) {
+  // a folder that isn't the user's is ignored rather than trusted
+  const folderId =
+    input.folderId && (await getOwnedFolder(db, ownerId, input.folderId)) ? input.folderId : null;
   return db.transaction(async (tx) => {
     const [prompt] = await tx
       .insert(prompts)
-      .values({ ownerId, title: input.title, tags: input.tags })
+      .values({ ownerId, folderId, title: input.title, tags: input.tags })
       .returning({ id: prompts.id });
     await tx.insert(versions).values({ promptId: prompt.id, number: 1, content: input.content });
     return prompt;
   });
 }
 
-export async function listPrompts(db: Db, ownerId: string) {
-  return db
+/**
+ * The user's prompts, most recently updated first.
+ * folder: undefined = all, null = unsorted only, id = that folder only.
+ */
+export async function listPrompts(
+  db: Db,
+  ownerId: string,
+  opts: { folder?: string | null; limit?: number } = {},
+) {
+  const folderFilter =
+    opts.folder === undefined
+      ? undefined
+      : opts.folder === null
+        ? isNull(prompts.folderId)
+        : eq(prompts.folderId, opts.folder);
+  const query = db
     .select({
       id: prompts.id,
       title: prompts.title,
       tags: prompts.tags,
       visibility: prompts.visibility,
       updatedAt: prompts.updatedAt,
+      folderId: prompts.folderId,
+      folderName: folders.name,
       versionCount: count(versions.id),
+      latest: max(versions.number),
+      // first 240 characters of the newest version, for cards
+      preview: sql<string>`(select left(lv.content, 240) from ${versions} lv
+        where lv.prompt_id = ${prompts.id} order by lv.number desc limit 1)`,
     })
     .from(prompts)
     .leftJoin(versions, eq(versions.promptId, prompts.id))
-    .where(eq(prompts.ownerId, ownerId))
-    .groupBy(prompts.id)
+    .leftJoin(folders, eq(folders.id, prompts.folderId))
+    .where(and(eq(prompts.ownerId, ownerId), folderFilter))
+    .groupBy(prompts.id, folders.name)
     .orderBy(desc(prompts.updatedAt));
+  return opts.limit ? query.limit(opts.limit) : query;
 }
+
+export type PromptSummary = Awaited<ReturnType<typeof listPrompts>>[number];
 
 /** A prompt with all its versions (newest first), or null if missing or not owned. */
 export async function getOwnedPrompt(db: Db, ownerId: string, promptId: string) {
