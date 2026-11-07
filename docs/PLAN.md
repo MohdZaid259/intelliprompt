@@ -3,7 +3,7 @@
 > Status: plan agreed 2026-11-03; MVP built 2026-11-07
 > Decisions locked: Postgres + Drizzle · fresh rebuild (reuse UI) · one paid OpenRouter key + daily quota · Pro plan in MVP · no direct messages · MVP also includes leaderboard, streaks, blog, newsletter, BullMQ email queue + worker, saves/shares, comment likes
 
-> Progress: Milestones 0–4 are built and tested with real keys. Next: 5 Launch.
+> Progress: Milestones 0–5 are done. Live at https://intelliprompt.vercel.app (Vercel + Neon + Railway, Razorpay in test mode).
 
 ---
 

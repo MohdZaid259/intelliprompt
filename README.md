@@ -2,6 +2,8 @@
 
 Enhance a prompt, run it on several models side by side, keep the best version, and share it with the community.
 
+Live: https://intelliprompt.vercel.app
+
 See [docs/PLAN.md](docs/PLAN.md) for the product scope, architecture and milestones.
 
 ## Stack
