@@ -47,11 +47,14 @@ async function Profile({
           </div>
           <StreakBadge days={liveStreak(profile)} />
           {profile.bio && <p className="max-w-prose">{profile.bio}</p>}
-          <dl className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-1 text-sm">
+          <div className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <Stat label="published" value={profile.published} />
-            <Stat label="likes received" value={profile.likesReceived} />
+            <Stat
+              label={profile.likesReceived === 1 ? "like received" : "likes received"}
+              value={profile.likesReceived}
+            />
             <Stat label="following" value={profile.following} />
-          </dl>
+          </div>
           {profile.isSelf ? (
             <p className="text-muted-foreground text-sm">
               <span className="text-foreground font-medium">{profile.followers}</span> followers ·
@@ -86,12 +89,9 @@ async function Profile({
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex gap-1">
-      <dt className="sr-only">{label}</dt>
-      <dd>
-        <span className="text-foreground font-medium tabular-nums">{value}</span> {label}
-      </dd>
-    </div>
+    <p>
+      <span className="text-foreground font-medium tabular-nums">{value}</span> {label}
+    </p>
   );
 }
 

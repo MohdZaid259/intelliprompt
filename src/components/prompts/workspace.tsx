@@ -40,6 +40,8 @@ export function PromptWorkspace({
 
   return (
     <div className="space-y-6">
+      {/* private page, so the tab title is set here rather than in metadata */}
+      <title>{`${prompt.title} · IntelliPrompt`}</title>
       <PromptHeader prompt={prompt} />
       <PublishControl prompt={prompt} selected={selected} versions={versions} />
       <div className="grid gap-6 lg:grid-cols-[1fr_220px]">

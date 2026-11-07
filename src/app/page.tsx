@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LandingAccountLink } from "@/components/landing-account-link";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 
@@ -14,9 +15,7 @@ export default function LandingPage() {
           <Button asChild variant="ghost">
             <Link href="/pricing">Pricing</Link>
           </Button>
-          <Button asChild variant="ghost">
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
+          <LandingAccountLink />
         </nav>
       </header>
 

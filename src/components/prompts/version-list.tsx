@@ -36,6 +36,7 @@ export function VersionList({
             type="button"
             onClick={() => onSelect(v.id)}
             aria-current={v.id === selectedId}
+            aria-label={`Version ${v.number}${v.id === publishedId ? ", public" : ""}`}
             className={cn(
               "hover:bg-accent w-full rounded-md px-2 py-2 text-left text-sm transition-colors",
               v.id === selectedId && "bg-accent",
