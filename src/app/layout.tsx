@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
+import { AnalyticsIdentify } from "@/components/analytics-identify";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { siteUrl } from "@/lib/site-url";
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           >
             {children}
             <Toaster />
+            <AnalyticsIdentify />
             <Analytics />
             <SpeedInsights />
           </ThemeProvider>

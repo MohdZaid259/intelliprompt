@@ -91,6 +91,7 @@ export async function notifyFollowers(deps: EmailDeps, promptId: string, progres
             to: r.email,
             oneClickUnsubscribeUrl: unsub.oneClick,
             ...newPromptEmail({
+              appUrl: deps.appUrl,
               authorName: prompt.authorName || `@${prompt.username}`,
               title: prompt.title,
               preview: prompt.content.slice(0, 400),
@@ -130,7 +131,7 @@ export async function sendAnnouncement(
           return {
             to: r.email,
             oneClickUnsubscribeUrl: unsub.oneClick,
-            ...announcementEmail({ ...data, unsubscribeUrl: unsub.page }),
+            ...announcementEmail({ ...data, appUrl: deps.appUrl, unsubscribeUrl: unsub.page }),
           };
         }),
         `announce-${jobId}-${key}`,

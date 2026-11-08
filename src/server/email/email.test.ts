@@ -49,6 +49,7 @@ async function publishedPrompt() {
 describe("templates", () => {
   it("escapes user content", () => {
     const email = newPromptEmail({
+      appUrl: "https://app.test",
       authorName: "<b>Eve</b>",
       title: `"><script>`,
       preview: "<img src=x>",
@@ -62,7 +63,12 @@ describe("templates", () => {
   });
 
   it("turns blank lines into paragraphs in announcements", () => {
-    const email = announcementEmail({ subject: "News", body: "One\n\nTwo", unsubscribeUrl: "u" });
+    const email = announcementEmail({
+      appUrl: "https://app.test",
+      subject: "News",
+      body: "One\n\nTwo",
+      unsubscribeUrl: "u",
+    });
     expect(email.html.match(/<p style="margin:0 0 16px/g)).toHaveLength(2);
   });
 });

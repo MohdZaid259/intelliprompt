@@ -33,6 +33,11 @@ const PROCESSORS = [
     "Request data such as IP address, browser and pages visited",
   ],
   [
+    "PostHog",
+    "Product analytics and session replays, to see how people use the app and fix problems",
+    "Pages visited, clicks, a recording of your screen in the app (typed text hidden), your user ID, username and email",
+  ],
+  [
     "Railway",
     "Background email jobs and rate limiting",
     "Your user ID and email address while a job runs",
@@ -128,9 +133,16 @@ export default function PrivacyPage() {
 
       <h2>5. Cookies and analytics</h2>
       <p>
-        We use only the cookies needed to keep you signed in and secure. Your theme choice is stored
-        in your browser. Our analytics and performance monitoring are cookieless and don&apos;t
-        track you across other websites.
+        We use cookies to keep you signed in and secure. Your theme choice is stored in your
+        browser.
+      </p>
+      <p>
+        We use PostHog to understand how the app is used: which pages people visit and what they
+        click. PostHog may also record sessions, a replay of what happened on screen, so we can find
+        confusing screens and bugs. Text you type into fields, such as your prompts, is hidden in
+        these replays. PostHog stores an identifier in your browser for this. Vercel&apos;s
+        analytics and performance monitoring are cookieless. None of this is used for advertising or
+        to track you across other websites.
       </p>
 
       <h2>6. Storage and security</h2>
