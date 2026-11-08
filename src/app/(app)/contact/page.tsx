@@ -18,7 +18,12 @@ const TOPICS = [
 export default function ContactPage() {
   const details = [
     { icon: Mail, label: "Email", value: LEGAL.email, href: `mailto:${LEGAL.email}` },
-    LEGAL.phone && { icon: Phone, label: "Phone", value: LEGAL.phone, href: `tel:${LEGAL.phone}` },
+    LEGAL.phone && {
+      icon: Phone,
+      label: "Phone",
+      value: LEGAL.phone,
+      href: `tel:${LEGAL.phone.replace(/\s/g, "")}`,
+    },
     LEGAL.address && { icon: MapPin, label: "Address", value: LEGAL.address },
     { icon: Clock, label: "Response time", value: "Within 2 business days (Mon–Fri)" },
   ].filter((d) => !!d);

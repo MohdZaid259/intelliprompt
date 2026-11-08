@@ -7,9 +7,9 @@ export const LEGAL = {
   operator: "",
   email: "support@intelliprompt.lol",
   /** Postal address (shown when set; Razorpay usually expects one on the contact page). */
-  address: "",
+  address: "Floor 3, Indiranagar, Bengaluru, Karnataka, India",
   /** Support phone (optional). */
-  phone: "",
+  phone: "+91 97953 72555",
   country: "India",
   updated: "8 November 2026",
 } as const;
