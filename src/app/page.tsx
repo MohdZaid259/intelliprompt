@@ -40,6 +40,15 @@ const FOOTER_COLUMNS = [
       { href: "/dashboard", label: "Dashboard" },
     ],
   },
+  {
+    title: "Company",
+    links: [
+      { href: "/contact", label: "Contact us" },
+      { href: "/terms", label: "Terms & Conditions" },
+      { href: "/privacy", label: "Privacy Policy" },
+      { href: "/refund-policy", label: "Refund Policy" },
+    ],
+  },
 ];
 
 // Always dark, whatever the app theme: the `dark` class switches the design tokens.
@@ -82,8 +91,8 @@ export default function LandingPage() {
       </main>
 
       <footer className="relative z-10 border-t border-purple-500/15">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
-          <div className="space-y-3">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-6 py-12 sm:grid-cols-3 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
+          <div className="col-span-2 space-y-3 sm:col-span-3 lg:col-span-1">
             <Logo />
             <p className="max-w-xs text-sm text-white/50">
               Enhance, test and share prompts across leading AI models.

@@ -116,7 +116,10 @@ export function LandingPricing() {
         </PlanCard>
       </div>
       <p className="mt-10 text-center text-sm text-white/40">
-        One-time payment, no auto-renew. Fair-use daily AI budget applies.
+        One-time payment, no auto-renew. Fair-use daily AI budget applies.{" "}
+        <Link href="/refund-policy" className="underline underline-offset-2 hover:text-white/70">
+          Refund policy
+        </Link>
       </p>
     </section>
   );

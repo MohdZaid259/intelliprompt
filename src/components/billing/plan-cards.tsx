@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MODELS } from "@/config/models";
@@ -76,7 +77,15 @@ export function PlanCards({
             />
             <p className="text-muted-foreground text-center text-xs">
               One-time payment, no auto-renew. Buying again adds to your remaining time. Fair-use
-              daily AI budget applies.
+              daily AI budget applies. By paying you agree to our{" "}
+              <Link href="/terms" className="underline underline-offset-2">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/refund-policy" className="underline underline-offset-2">
+                Refund Policy
+              </Link>
+              .
             </p>
           </div>
         </CardContent>

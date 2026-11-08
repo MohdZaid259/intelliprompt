@@ -109,7 +109,9 @@ export default async function Image() {
                 fill="#fff"
               />
             </svg>
-            <span style={{ fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>IntelliPrompt</span>
+            <span style={{ fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>
+              IntelliPrompt
+            </span>
           </div>
 
           <div
@@ -193,7 +195,10 @@ export default async function Image() {
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
-              <path d="M12 2 Q13.2 10.8 22 12 Q13.2 13.2 12 22 Q10.8 13.2 2 12 Q10.8 10.8 12 2Z" fill="#c084fc" />
+              <path
+                d="M12 2 Q13.2 10.8 22 12 Q13.2 13.2 12 22 Q10.8 13.2 2 12 Q10.8 10.8 12 2Z"
+                fill="#c084fc"
+              />
             </svg>
             Write a launch tweet for our app
           </div>
@@ -215,7 +220,13 @@ export default async function Image() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 18 }}>
                 <div
-                  style={{ display: "flex", width: 12, height: 12, borderRadius: 9999, background: a.color }}
+                  style={{
+                    display: "flex",
+                    width: 12,
+                    height: 12,
+                    borderRadius: 9999,
+                    background: a.color,
+                  }}
                 />
                 <span style={{ fontWeight: 500 }}>{a.model}</span>
                 <span style={{ marginLeft: "auto", color: "rgba(255,255,255,0.45)", fontSize: 16 }}>
