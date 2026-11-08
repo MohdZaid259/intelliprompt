@@ -324,7 +324,7 @@ export function ProductDemo() {
           <span className="size-2.5 rounded-full bg-[#febc2e]" />
           <span className="size-2.5 rounded-full bg-[#28c840]" />
           <span className="mx-auto hidden rounded-md bg-white/5 px-10 py-1 text-xs text-white/40 sm:block">
-            intelliprompt.vercel.app
+            intelliprompt.lol
           </span>
         </div>
 
