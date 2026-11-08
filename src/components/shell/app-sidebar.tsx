@@ -18,6 +18,7 @@ import {
   Plus,
   Settings,
   Shield,
+  Star,
   Sparkles,
   Trash2,
   TrophyIcon,
@@ -58,12 +59,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { DeleteFolderDialog, FolderNameDialog } from "@/components/folders/folder-dialogs";
+import { ReviewDialog, type MyReview } from "@/components/reviews/review-dialog";
 
 export type ShellUser = {
   name: string;
   username: string;
   avatarUrl: string;
   role: "user" | "admin";
+  review: MyReview | null;
 };
 export type ShellFolder = { id: string; name: string; promptCount: number };
 export type ShellPrompt = { id: string; title: string; folderId: string | null };
@@ -284,6 +287,7 @@ function FoldersSection({
 }
 
 function UserMenu({ user }: { user: ShellUser }) {
+  const [reviewing, setReviewing] = useState(false);
   const initials = user.name
     .split(" ")
     .map((w) => w[0])
@@ -335,6 +339,9 @@ function UserMenu({ user }: { user: ShellUser }) {
                 </Link>
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem onSelect={() => setReviewing(true)}>
+              <Star /> {user.review ? "Edit your review" : "Leave a review"}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <SignOutButton>
               <DropdownMenuItem variant="destructive">
@@ -343,6 +350,9 @@ function UserMenu({ user }: { user: ShellUser }) {
             </SignOutButton>
           </DropdownMenuContent>
         </DropdownMenu>
+        {reviewing && (
+          <ReviewDialog open={reviewing} onOpenChange={setReviewing} review={user.review} />
+        )}
       </SidebarMenuItem>
     </SidebarMenu>
   );

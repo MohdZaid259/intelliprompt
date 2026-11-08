@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { LandingAccountLink } from "@/components/landing-account-link";
 import { CommunityWall } from "@/components/landing/community-wall";
+import { Reviews } from "@/components/landing/reviews";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
@@ -83,6 +84,9 @@ export default function LandingPage() {
         <Features />
         <Suspense>
           <CommunityWall />
+        </Suspense>
+        <Suspense>
+          <Reviews />
         </Suspense>
         <Suspense>
           <LandingPricing />

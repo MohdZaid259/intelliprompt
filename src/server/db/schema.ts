@@ -291,3 +291,31 @@ export const promptsRelations = relations(prompts, ({ many }) => ({
 export const versionsRelations = relations(versions, ({ one }) => ({
   prompt: one(prompts, { fields: [versions.promptId], references: [prompts.id] }),
 }));
+
+/**
+ * One review per user, shown on the landing page only after an admin approves it.
+ * Editing a review sends it back for approval.
+ */
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(),
+    body: text("body").notNull(),
+    // what the reviewer does, e.g. "Product designer" (optional, shown under their name)
+    headline: text("headline").notNull().default(""),
+    approved: boolean("approved").notNull().default(false),
+    createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("reviews_approved_idx").on(t.approved, t.rating, t.updatedAt),
+    check("reviews_rating_range", sql`${t.rating} between 1 and 5`),
+    check("reviews_body_length", sql`char_length(${t.body}) between 20 and 500`),
+    check("reviews_headline_length", sql`char_length(${t.headline}) <= 60`),
+  ],
+);

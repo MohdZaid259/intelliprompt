@@ -1,8 +1,20 @@
-import { Bookmark, Clock, FileText, Flame, Globe, Heart, Lock, Plus, Zap } from "lucide-react";
+import {
+  Bookmark,
+  Clock,
+  FileText,
+  Flame,
+  Globe,
+  Heart,
+  Lock,
+  Plus,
+  Star,
+  Zap,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { StreakRing } from "@/components/dashboard/streak-ring";
+import { ReviewButton } from "@/components/reviews/review-dialog";
 import { PageHeading } from "@/components/folders/prompts-view";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +25,7 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { getDashboardStats } from "@/server/data/dashboard";
 import { listPrompts } from "@/server/data/prompts";
+import { getUserReview } from "@/server/data/reviews";
 import { getUsage } from "@/server/quota";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -39,16 +52,36 @@ export default function DashboardPage() {
 
 async function Dashboard() {
   const user = await requireUser();
-  const [stats, usage, recent] = await Promise.all([
+  const [stats, usage, recent, review] = await Promise.all([
     getDashboardStats(db(), user.id),
     getUsage(db(), user.id),
     listPrompts(db(), user.id, { limit: 5 }),
+    getUserReview(db(), user.id),
   ]);
   const plan = PLANS[user.plan];
   const budgetPct = Math.min(100, Math.round((usage.costUsd / plan.dailyBudgetUsd) * 100));
 
   return (
     <div className="space-y-6">
+      {/* ask for a review once someone has actually used the product */}
+      {!review && stats.runs >= 3 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <Star className="mt-0.5 size-5 shrink-0 fill-amber-400 text-amber-400" />
+              <div>
+                <p className="font-medium">Enjoying IntelliPrompt?</p>
+                <p className="text-muted-foreground text-sm">
+                  A short review helps others find it, and tells us what to improve.
+                </p>
+              </div>
+            </div>
+            <ReviewButton review={null} variant="outline" size="sm">
+              Leave a review
+            </ReviewButton>
+          </CardContent>
+        </Card>
+      )}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">

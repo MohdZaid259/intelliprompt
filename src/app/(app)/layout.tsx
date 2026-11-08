@@ -5,6 +5,7 @@ import { TopBar } from "@/components/shell/top-bar";
 import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUser } from "@/server/auth";
 import { db } from "@/server/db";
+import { getUserReview } from "@/server/data/reviews";
 import { listFolders } from "@/server/data/folders";
 import { listPrompts } from "@/server/data/prompts";
 
@@ -30,9 +31,10 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
 async function ShellSidebar() {
   const user = await getUser();
   if (!user) return <AppSidebar user={null} folders={[]} prompts={[]} />;
-  const [folders, prompts] = await Promise.all([
+  const [folders, prompts, review] = await Promise.all([
     listFolders(db(), user.id),
     listPrompts(db(), user.id),
+    getUserReview(db(), user.id),
   ]);
   return (
     <AppSidebar
@@ -41,6 +43,12 @@ async function ShellSidebar() {
         username: user.username,
         avatarUrl: user.avatarUrl,
         role: user.role,
+        review: review && {
+          rating: review.rating,
+          body: review.body,
+          headline: review.headline,
+          approved: review.approved,
+        },
       }}
       folders={folders}
       prompts={prompts.map((p) => ({ id: p.id, title: p.title, folderId: p.folderId }))}
