@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { LandingAccountLink } from "@/components/landing-account-link";
@@ -9,6 +10,10 @@ import { ModelStrip } from "@/components/landing/model-strip";
 import { LandingPricing } from "@/components/landing/pricing";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const FOOTER_COLUMNS = [
   {
