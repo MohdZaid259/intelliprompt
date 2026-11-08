@@ -2,15 +2,17 @@ import { createHash } from "node:crypto";
 import { and, asc, eq, gt, ne } from "drizzle-orm";
 import type { Db } from "@/server/db/types";
 import { follows, prompts, users, versions } from "@/server/db/schema";
-import { announcementEmail, newPromptEmail, type Email } from "./templates";
+import { PLANS } from "@/config/plans";
+import { announcementEmail, newPromptEmail, welcomeEmail, type Email } from "./templates";
 import { unsubscribeLinks, type EmailList } from "./unsubscribe";
 
 // Job payloads. Kept tiny: the worker re-reads current data when it runs.
 export type EmailJob =
   | { name: "notify-followers"; data: { promptId: string } }
-  | { name: "announcement"; data: { subject: string; body: string } };
+  | { name: "announcement"; data: { subject: string; body: string } }
+  | { name: "welcome"; data: { userId: string } };
 
-export type OutgoingEmail = Email & { to: string; oneClickUnsubscribeUrl: string };
+export type OutgoingEmail = Email & { to: string; oneClickUnsubscribeUrl?: string };
 
 /** Sends one batch (≤ BATCH_SIZE). Same recipients → same key, so a retried batch isn't re-sent. */
 export type SendBatch = (emails: OutgoingEmail[], key: string) => Promise<void>;
@@ -146,6 +148,26 @@ export async function sendAnnouncement(
 const links = (deps: EmailDeps, userId: string, list: EmailList) =>
   unsubscribeLinks(deps.appUrl, deps.secret, userId, list);
 
+/** One welcome email per account; the idempotency key stops a retried job from resending. */
+export async function sendWelcome(deps: EmailDeps, userId: string) {
+  const user = await deps.db.query.users.findFirst({ where: eq(users.id, userId) });
+  if (!user?.email) return 0; // deleted since, or no email address
+  await deps.send(
+    [
+      {
+        to: user.email,
+        ...welcomeEmail({
+          appUrl: deps.appUrl,
+          name: user.name || user.username,
+          freeRunsPerDay: PLANS.free.runsPerDay,
+        }),
+      },
+    ],
+    `welcome-${userId}`,
+  );
+  return 1;
+}
+
 export async function processEmailJob(
   deps: EmailDeps,
   job: EmailJob & { id: string },
@@ -156,5 +178,7 @@ export async function processEmailJob(
       return notifyFollowers(deps, job.data.promptId, progress);
     case "announcement":
       return sendAnnouncement(deps, job.data, job.id, progress);
+    case "welcome":
+      return sendWelcome(deps, job.data.userId);
   }
 }

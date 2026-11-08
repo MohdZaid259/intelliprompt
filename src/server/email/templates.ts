@@ -17,7 +17,7 @@ function layout(p: {
   preheader: string;
   body: string;
   reason: string;
-  unsubscribeUrl: string;
+  unsubscribeUrl?: string;
 }) {
   const app = esc(p.appUrl);
   return `<!doctype html>
@@ -47,7 +47,7 @@ ${p.body}
       </div>
     </td></tr>
     <tr><td style="padding:24px 8px 0;font-size:12px;line-height:1.6;color:${MUTED};text-align:center">
-      ${esc(p.reason)} <a href="${esc(p.unsubscribeUrl)}" style="color:${MUTED};text-decoration:underline">Unsubscribe</a><br>
+      ${esc(p.reason)}${p.unsubscribeUrl ? ` <a href="${esc(p.unsubscribeUrl)}" style="color:${MUTED};text-decoration:underline">Unsubscribe</a>` : ""}<br>
       <a href="${app}" style="color:${MUTED};text-decoration:none">IntelliPrompt</a> · Better prompts, proven across models<br>
       ${LEGAL.address ? `${esc(LEGAL.address)}<br>` : ""}
       <a href="${app}/privacy" style="color:${MUTED}">Privacy</a> · <a href="${app}/terms" style="color:${MUTED}">Terms</a> · <a href="mailto:${esc(LEGAL.email)}" style="color:${MUTED}">${esc(LEGAL.email)}</a>
@@ -120,4 +120,43 @@ ${paragraphs}
     }),
     text: `${p.body}\n\n—\nIntelliPrompt · ${p.appUrl}\nUnsubscribe: ${p.unsubscribeUrl}`,
   };
+}
+
+const STEPS = [
+  [
+    "Write or paste a prompt",
+    "Start from a rough idea. One click turns it into a clear, detailed prompt.",
+  ],
+  [
+    "Test it across models",
+    "Run it on several AI models at once and compare speed, cost and quality.",
+  ],
+  [
+    "Keep what works",
+    "Every save is a version. Star the best answer, publish it, or fork others' prompts.",
+  ],
+];
+
+export function welcomeEmail(p: { appUrl: string; name: string; freeRunsPerDay: number }): Email {
+  const first = p.name.trim().split(/\s+/)[0] || "there";
+  const subject = `Welcome to IntelliPrompt, ${first}`;
+  const steps = STEPS.map(
+    ([title, body], i) => `<tr>
+  <td style="width:28px;padding:0 0 18px;vertical-align:top"><div style="width:24px;height:24px;border-radius:12px;background:#ede9fe;color:${PURPLE};font-size:13px;font-weight:600;line-height:24px;text-align:center">${i + 1}</div></td>
+  <td style="padding:0 0 18px 10px;vertical-align:top"><p style="margin:0;font-size:15px;font-weight:600;color:${INK}">${title}</p><p style="margin:2px 0 0;font-size:14px;line-height:1.6;color:#52525b">${body}</p></td>
+</tr>`,
+  ).join("\n");
+  const html = layout({
+    appUrl: p.appUrl,
+    preheader: "Your workspace is ready. Here's how to get the most out of it.",
+    reason: "You get this because you created an IntelliPrompt account.",
+    body: `<h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;font-weight:600;letter-spacing:-0.3px;color:${INK}">Welcome, ${esc(first)} 👋</h1>
+<p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#3f3f46">Your workspace is ready. IntelliPrompt helps you write better prompts and prove they work across the leading AI models. Here's how to start:</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px">${steps}</table>
+${button(`${p.appUrl}/prompts/new`, "Write your first prompt")}
+<p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:${MUTED}">Your free plan includes ${p.freeRunsPerDay} model runs a day. Questions or ideas? Just reply to this email or write to <a href="mailto:${esc(LEGAL.email)}" style="color:${PURPLE}">${esc(LEGAL.email)}</a>.</p>`,
+  });
+  const list = STEPS.map(([t, b], i) => `${i + 1}. ${t}: ${b}`).join("\n");
+  const text = `Welcome, ${first}!\n\nYour IntelliPrompt workspace is ready.\n\n${list}\n\nWrite your first prompt: ${p.appUrl}/prompts/new\n\nQuestions? ${LEGAL.email}`;
+  return { subject, html, text };
 }

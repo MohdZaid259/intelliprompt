@@ -6,7 +6,13 @@ import type { Db } from "@/server/db/types";
 import { publishPrompt } from "@/server/data/community";
 import { createPrompt, getOwnedPrompt } from "@/server/data/prompts";
 import { toggleFollow } from "@/server/data/social";
-import { BATCH_SIZE, notifyFollowers, sendAnnouncement, type OutgoingEmail } from "./jobs";
+import {
+  BATCH_SIZE,
+  notifyFollowers,
+  sendAnnouncement,
+  sendWelcome,
+  type OutgoingEmail,
+} from "./jobs";
 import { announcementEmail, newPromptEmail } from "./templates";
 import { unsubscribeLinks, verifyUnsubscribe } from "./unsubscribe";
 
@@ -70,6 +76,23 @@ describe("templates", () => {
       unsubscribeUrl: "u",
     });
     expect(email.html.match(/<p style="margin:0 0 16px/g)).toHaveLength(2);
+  });
+});
+
+describe("welcome email", () => {
+  it("sends one personal, transactional email", async () => {
+    expect(await sendWelcome(deps(), "author")).toBe(1);
+    expect(sent).toHaveLength(1);
+    const [email] = sent[0].emails;
+    expect(sent[0].key).toBe("welcome-author");
+    expect(email).toMatchObject({ to: "ada@x.com", subject: "Welcome to IntelliPrompt, Ada" });
+    expect(email.oneClickUnsubscribeUrl).toBeUndefined();
+    expect(email.html).toContain("https://app.test/prompts/new");
+  });
+
+  it("skips users that no longer exist", async () => {
+    expect(await sendWelcome(deps(), "gone")).toBe(0);
+    expect(sent).toHaveLength(0);
   });
 });
 

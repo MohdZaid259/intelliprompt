@@ -38,6 +38,11 @@ describe("upsertUserFromClerk", () => {
     expect(user).toMatchObject({ id: "user_1", username: "zaid", name: "Mohd Zaid", plan: "free" });
   });
 
+  it("reports whether the row was just created (drives the welcome email)", async () => {
+    expect((await upsertUserFromClerk(db, profile())).created).toBe(true);
+    expect((await upsertUserFromClerk(db, profile({ firstName: "Z" }))).created).toBe(false);
+  });
+
   it("updates profile fields without touching plan or role", async () => {
     await upsertUserFromClerk(db, profile());
     await db.execute(sql`update users set plan = 'pro', role = 'admin'`);

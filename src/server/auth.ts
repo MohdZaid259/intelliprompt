@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/server/db";
 import { findUserById, upsertUserFromClerk } from "@/server/data/users";
+import { welcomeIfNew } from "@/server/welcome";
 import type { users } from "@/server/db/schema";
 import { effectivePlan, type PlanKey } from "@/config/plans";
 
@@ -43,6 +44,7 @@ export const getUser = cache(async function getUser(): Promise<SessionUser | nul
     lastName: clerkUser.lastName,
     imageUrl: clerkUser.imageUrl,
   });
+  await welcomeIfNew(created);
   return toSessionUser(created);
 });
 

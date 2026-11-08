@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { Db } from "@/server/db/types";
 import { users } from "@/server/db/schema";
 import { deriveUsername, withSuffix } from "@/lib/username";
@@ -51,7 +51,7 @@ export async function upsertUserFromClerk(db: Db, profile: ClerkProfile) {
             ...(profile.username ? { username } : {}),
           },
         })
-        .returning();
+        .returning({ ...getTableColumns(users), created: sql<boolean>`(xmax = 0)` });
       return row;
     } catch (err) {
       if (!isUsernameTaken(err)) throw err;

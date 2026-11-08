@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/server/db";
 import { deleteUser, upsertUserFromClerk } from "@/server/data/users";
 import { env } from "@/server/env";
+import { welcomeIfNew } from "@/server/welcome";
 
 function primaryEmail(data: UserJSON) {
   const primary = data.email_addresses.find((e) => e.id === data.primary_email_address_id);
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     case "user.created":
     case "user.updated": {
       const data = event.data;
-      await upsertUserFromClerk(db(), {
+      const row = await upsertUserFromClerk(db(), {
         id: data.id,
         username: data.username,
         email: primaryEmail(data),
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
         lastName: data.last_name,
         imageUrl: data.image_url,
       });
+      await welcomeIfNew(row);
       break;
     }
     case "user.deleted":

@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { LEGAL } from "@/config/legal";
 import type { SendBatch } from "./jobs";
 
 /** Sends through Resend's batch API with one-click unsubscribe headers. */
@@ -12,10 +13,14 @@ export function resendSender(apiKey: string, from: string): SendBatch {
         subject: e.subject,
         html: e.html,
         text: e.text,
-        headers: {
-          "List-Unsubscribe": `<${e.oneClickUnsubscribeUrl}>`,
-          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-        },
+        replyTo: LEGAL.email,
+        // transactional emails (welcome) have no unsubscribe link
+        headers: e.oneClickUnsubscribeUrl
+          ? {
+              "List-Unsubscribe": `<${e.oneClickUnsubscribeUrl}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
+          : undefined,
       })),
       { idempotencyKey: key },
     );
