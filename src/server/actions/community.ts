@@ -31,10 +31,11 @@ export const publishAction = authedAction(
     await touchStreak(db(), user.id);
     if (published.firstPublish && (await checkRateLimit("notifyFollowers", user.id)).ok) {
       // jobId dedupes: followers hear about a prompt once, even if it's unpublished and republished
+      // the publish already succeeded; a queue outage only costs the follower emails
       await enqueueEmail(
         { name: "notify-followers", data: { promptId } },
         { jobId: `notify-${promptId}` },
-      );
+      ).catch((err) => console.error("[email] couldn't queue notify-followers:", err));
     }
     updateTag(promptTag(promptId));
     refresh();

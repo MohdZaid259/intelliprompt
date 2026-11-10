@@ -17,8 +17,14 @@ function queue(): Queue | null {
       removeOnFail: 5000,
     },
   });
+  if (globalForQueue.emailQueue.listenerCount("error") === 0) {
+    globalForQueue.emailQueue.on("error", (err) => console.error("[email] queue error:", err.message));
+  }
   return globalForQueue.emailQueue;
 }
+
+/** How long to wait for Redis before giving up, so an unreachable queue can't hang a request. */
+const ENQUEUE_TIMEOUT_MS = 5_000;
 
 /**
  * Adds an email job. Without REDIS_URL (e.g. local dev) emails are skipped with a log line,
@@ -30,5 +36,18 @@ export async function enqueueEmail(job: EmailJob, opts: { jobId?: string } = {})
     console.warn(`[email] REDIS_URL not set, skipping "${job.name}" job`);
     return;
   }
-  await q.add(job.name, job.data, { jobId: opts.jobId });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      q.add(job.name, job.data, { jobId: opts.jobId }),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`email queue unreachable after ${ENQUEUE_TIMEOUT_MS}ms`)),
+          ENQUEUE_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }

@@ -28,7 +28,12 @@ export const sendAnnouncementAction = authedAction(
   async (data, user) => {
     if (user.role !== "admin") throw new UserError("Only admins can send announcements.");
     if (!process.env.REDIS_URL) throw new UserError("Email queue isn't configured (REDIS_URL).");
-    await enqueueEmail({ name: "announcement", data }, { jobId: randomUUID() });
+    try {
+      await enqueueEmail({ name: "announcement", data }, { jobId: randomUUID() });
+    } catch (err) {
+      console.error("[email] couldn't queue announcement:", err);
+      throw new UserError("Couldn't reach the email queue. Nothing was sent. Try again shortly.");
+    }
   },
   { rateLimit: "announce" },
 );
