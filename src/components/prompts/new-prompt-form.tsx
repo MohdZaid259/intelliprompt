@@ -1,7 +1,7 @@
 "use client";
 
 import { Folder, Inbox, Loader2, Plus, Sparkles } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { takeDraft } from "@/lib/draft";
 import { parseTags } from "@/lib/format";
 import { LIMITS } from "@/lib/validation";
 import { createPromptAction } from "@/server/actions/prompts";
@@ -33,6 +34,17 @@ export function NewPromptForm({
   const [folderId, setFolderId] = useState(defaultFolderId ?? NONE);
   const [enhanced, setEnhanced] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  // a prompt enhanced on the home page before signing up carries over here. Read after
+  // hydration (browser storage doesn't exist on the server), so setting state here is intended.
+  useEffect(() => {
+    const draft = takeDraft();
+    if (draft) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setContent(draft);
+      setEnhanced(true);
+    }
+  }, []);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();

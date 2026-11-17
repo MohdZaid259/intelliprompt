@@ -19,6 +19,7 @@ import {
   getProfile,
   listComments,
   recordShare,
+  suggestCreators,
   toggleCommentLike,
   toggleFollow,
   toggleLike,
@@ -195,6 +196,25 @@ describe("social actions", () => {
     expect(await toggleFollow(db, BOB, ALICE)).toEqual({ active: false, count: 0 });
     expect(await toggleFollow(db, BOB, BOB)).toBeNull();
     expect(await toggleFollow(db, BOB, "user_missing")).toBeNull();
+  });
+
+  it("suggests authors to follow: most public prompts first, not self or already followed", async () => {
+    await published(BOB, "One");
+    await published(CARA, "Two");
+    await published(CARA, "Three");
+    await createPrompt(db, ALICE, { title: "Private", content: "secret", tags: [] });
+
+    let suggested = await suggestCreators(db, ALICE);
+    expect(suggested.map((u) => [u.username, u.publicPrompts])).toEqual([
+      ["cara", 2],
+      ["bob", 1],
+    ]);
+    expect(suggested[0]).not.toHaveProperty("email");
+
+    await toggleFollow(db, ALICE, CARA);
+    suggested = await suggestCreators(db, ALICE);
+    expect(suggested.map((u) => u.username)).toEqual(["bob"]);
+    expect((await suggestCreators(db, BOB)).map((u) => u.username)).toEqual(["cara"]);
   });
 
   it("builds a profile without private fields", async () => {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LightRays } from "./light-rays";
 import { ProductDemo } from "./product-demo";
+import { TryEnhance } from "./try-enhance";
 
 export function Hero() {
   return (
@@ -18,7 +19,10 @@ export function Hero() {
           Enhance a rough prompt, compare answers from leading models side by side, and keep the
           version that wins.
         </p>
-        <div className="flex flex-wrap justify-center gap-3 pt-2">
+        <div className="pt-2">
+          <TryEnhance />
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
           <Button
             asChild
             size="lg"

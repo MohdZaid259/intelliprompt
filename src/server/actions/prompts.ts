@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { BUDGET_MESSAGE, PLANS } from "@/config/plans";
 import { contentSchema, idSchema, LIMITS, tagsSchema, titleSchema } from "@/lib/validation";
-import { enhancePrompt } from "@/server/ai/enhance";
+import { clarifyPrompt, enhancePrompt } from "@/server/ai/enhance";
 import { openRouterKeys, openRouterModel } from "@/server/ai/client";
 import { db } from "@/server/db";
 import {
@@ -18,7 +18,7 @@ import {
 import { touchStreak } from "@/server/data/engagement";
 import { deleteRun, toggleBestRun } from "@/server/data/runs";
 import { promptTag } from "@/server/public-card";
-import { recordCost, releaseQuota, reserveQuota, withinBudget } from "@/server/quota";
+import { addCost, recordCost, releaseQuota, reserveQuota, withinBudget } from "@/server/quota";
 import { authedAction, UserError } from "./safe-action";
 
 const notFound = () => new UserError("That prompt doesn't exist or isn't yours.");
@@ -81,9 +81,40 @@ export const deletePromptAction = authedAction(
   },
 );
 
-export const enhanceAction = authedAction(
+const answersSchema = z
+  .array(z.object({ question: z.string().trim().max(120), answer: z.string().trim().max(120) }))
+  .max(6)
+  .default([]);
+
+/**
+ * Asks a few quick questions before enhancing (goal, audience, length...). Doesn't use an
+ * enhancement from the daily quota; its small cost still counts toward the daily budget.
+ * On any failure it returns no questions, so the user can still enhance straight away.
+ */
+export const clarifyAction = authedAction(
   z.object({ content: contentSchema }),
   async ({ content }, user) => {
+    if (!(await withinBudget(db(), user.id, PLANS[user.plan].dailyBudgetUsd)))
+      throw new UserError(BUDGET_MESSAGE);
+    try {
+      const result = await clarifyPrompt(content, {
+        keys: openRouterKeys(),
+        createModel: openRouterModel,
+        userId: user.id,
+      });
+      await addCost(db(), user.id, result.costUsd);
+      return { questions: result.questions.slice(0, 4) };
+    } catch (error) {
+      console.error("clarify failed", error);
+      return { questions: [] };
+    }
+  },
+  { rateLimit: "enhance" },
+);
+
+export const enhanceAction = authedAction(
+  z.object({ content: contentSchema, answers: answersSchema }),
+  async ({ content, answers }, user) => {
     const plan = PLANS[user.plan];
     if (!(await withinBudget(db(), user.id, plan.dailyBudgetUsd)))
       throw new UserError(BUDGET_MESSAGE);
@@ -94,6 +125,7 @@ export const enhanceAction = authedAction(
     }
     try {
       const result = await enhancePrompt(content, {
+        answers,
         keys: openRouterKeys(),
         createModel: openRouterModel,
         userId: user.id,

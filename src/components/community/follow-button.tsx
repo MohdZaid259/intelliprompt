@@ -11,11 +11,14 @@ export function FollowButton({
   following,
   followers,
   signedIn,
+  compact = false,
 }: {
   userId: string;
   following: boolean;
   followers: number;
   signedIn: boolean;
+  /** Just the button, small, for lists. */
+  compact?: boolean;
 }) {
   const [state, setState] = useState({ active: following, count: followers });
   const [pending, startTransition] = useTransition();
@@ -35,11 +38,21 @@ export function FollowButton({
     });
   };
 
+  const button = (
+    <Button
+      variant={state.active ? "outline" : "default"}
+      size={compact ? "sm" : "default"}
+      onClick={toggle}
+      disabled={pending}
+    >
+      {state.active ? "Following" : "Follow"}
+    </Button>
+  );
+  if (compact) return button;
+
   return (
     <div className="flex items-center gap-3">
-      <Button variant={state.active ? "outline" : "default"} onClick={toggle} disabled={pending}>
-        {state.active ? "Following" : "Follow"}
-      </Button>
+      {button}
       <span className="text-muted-foreground text-sm">
         <span className="text-foreground font-medium tabular-nums">{state.count}</span> follower
         {state.count === 1 ? "" : "s"}

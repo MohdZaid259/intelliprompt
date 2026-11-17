@@ -212,3 +212,29 @@ export async function getProfile(db: Db, username: string, viewerId: string | nu
     isSelf: viewerId === user.id,
   };
 }
+
+/**
+ * People worth following for someone whose Following feed is empty: authors with the most
+ * public prompts, leaving out the viewer and anyone they already follow.
+ */
+export async function suggestCreators(db: Db, viewerId: string, limit = 6) {
+  const publicCount = sql<number>`count(${prompts.id})::int`.mapWith(Number);
+  const alreadyFollowed = db
+    .select({ id: follows.followeeId })
+    .from(follows)
+    .where(eq(follows.followerId, viewerId));
+  return db
+    .select({
+      id: users.id,
+      username: users.username,
+      name: users.name,
+      avatarUrl: users.avatarUrl,
+      publicPrompts: publicCount,
+    })
+    .from(users)
+    .innerJoin(prompts, and(eq(prompts.ownerId, users.id), eq(prompts.visibility, "public")))
+    .where(and(sql`${users.id} <> ${viewerId}`, sql`${users.id} not in ${alreadyFollowed}`))
+    .groupBy(users.id)
+    .orderBy(sql`count(${prompts.id}) desc`, asc(users.username))
+    .limit(limit);
+}

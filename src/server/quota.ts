@@ -39,6 +39,18 @@ export async function releaseQuota(db: Db, userId: string, kind: QuotaKind, day:
     .where(and(eq(usageDaily.userId, userId), eq(usageDaily.day, day)));
 }
 
+/** Adds AI spend that isn't tied to a quota unit (e.g. clarifying questions) to today's budget. */
+export async function addCost(db: Db, userId: string, costUsd: number) {
+  if (costUsd <= 0) return;
+  await db
+    .insert(usageDaily)
+    .values({ userId, day: today(), costUsd: String(costUsd) })
+    .onConflictDoUpdate({
+      target: [usageDaily.userId, usageDaily.day],
+      set: { costUsd: sql`${usageDaily.costUsd} + ${costUsd}` },
+    });
+}
+
 export async function recordCost(db: Db, userId: string, costUsd: number, day: string) {
   if (costUsd <= 0) return;
   await db

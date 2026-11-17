@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { FeedList, FeedSkeletonGrid } from "@/components/community/feed-list";
+import { SuggestedCreators } from "@/components/community/suggested-creators";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -96,10 +97,7 @@ async function Explore({ searchParams }: { searchParams: PageProps<"/explore">["
           pageHref={(p) => href({ page: p })}
           empty={
             tab === "following" ? (
-              <EmptyState
-                title="Nothing from people you follow yet"
-                body="Find authors on the Latest tab and follow them."
-              />
+              <SuggestedCreators viewerId={viewer!.id} />
             ) : (
               <EmptyState
                 title="No public prompts yet"

@@ -17,6 +17,9 @@ export const RATE_LIMITS = {
   announce: { limit: 5, windowSec: 3600 },
   // follower emails per author per day; publishing still works beyond this, just silently
   notifyFollowers: { limit: 3, windowSec: 86_400 },
+  // signed-out "try it" enhances on the home page: per visitor IP, and for everyone together
+  tryEnhanceIp: { limit: 2, windowSec: 86_400 },
+  tryEnhanceGlobal: { limit: 300, windowSec: 86_400 },
 } as const;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;
@@ -79,6 +82,8 @@ export async function checkRateLimit(
   id: string,
   store: CounterStore = defaultStore(),
   now = Date.now(),
+  /** Refuse when the counter can't be checked. For anonymous AI spend, where failing open costs money. */
+  failClosed = false,
 ): Promise<RateLimitResult> {
   const { limit, windowSec } = RATE_LIMITS[name];
   const window = Math.floor(now / 1000 / windowSec);
@@ -87,8 +92,9 @@ export async function checkRateLimit(
     if (count <= limit) return { ok: true };
     return { ok: false, retryAfterSec: (window + 1) * windowSec - Math.floor(now / 1000) };
   } catch (err) {
-    // fail open: a Redis hiccup shouldn't take the app down
     console.error("[rate-limit] check failed:", err);
+    if (failClosed) return { ok: false, retryAfterSec: 60 };
+    // fail open: a Redis hiccup shouldn't take the app down
     return { ok: true };
   }
 }

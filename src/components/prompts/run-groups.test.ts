@@ -22,7 +22,11 @@ const ids = (runs: WorkspaceRun[]) => runs.map((r) => r.id);
 describe("groupRuns", () => {
   it("shows one card per model: the newest answer", () => {
     // newest first, as the server returns them
-    const { current, earlier } = groupRuns([run("haiku-2", "haiku"), run("gpt-1", "gpt"), run("haiku-1", "haiku")]);
+    const { current, earlier } = groupRuns([
+      run("haiku-2", "haiku"),
+      run("gpt-1", "gpt"),
+      run("haiku-1", "haiku"),
+    ]);
     expect(ids(current)).toEqual(["haiku-2", "gpt-1"]);
     expect(ids(earlier)).toEqual(["haiku-1"]);
   });

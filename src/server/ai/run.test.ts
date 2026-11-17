@@ -2,7 +2,7 @@ import { APICallError, simulateReadableStream } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
 import type { ModelFactory } from "./client";
-import { enhancePrompt } from "./enhance";
+import { clarifyPrompt, enhancePrompt, enhancerInput } from "./enhance";
 import { runModel } from "./run";
 
 const usage = (input: number, output: number) => ({
@@ -125,6 +125,53 @@ describe("runModel", () => {
       onDelta: () => {},
     });
     expect(outcome).toMatchObject({ status: "error", output: "" });
+  });
+});
+
+describe("clarifyPrompt", () => {
+  it("returns tappable questions", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => ({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              questions: [
+                { question: "What's the goal?", options: ["Artifact", "Quick answer", "Code"] },
+              ],
+            }),
+          },
+        ],
+        finishReason: { unified: "stop", raw: undefined },
+        usage: usage(30, 20),
+        warnings: [],
+      }),
+    });
+    const result = await clarifyPrompt("cold market study", {
+      keys: ["k1"],
+      createModel: () => model,
+    });
+    expect(result.questions).toEqual([
+      { question: "What's the goal?", options: ["Artifact", "Quick answer", "Code"] },
+    ]);
+  });
+});
+
+describe("enhancerInput", () => {
+  it("is the prompt unchanged when nothing was answered", () => {
+    expect(enhancerInput("write a tweet")).toBe("write a tweet");
+    expect(enhancerInput("write a tweet", [{ question: "Tone?", answer: " " }])).toBe(
+      "write a tweet",
+    );
+  });
+
+  it("appends the picked answers", () => {
+    expect(
+      enhancerInput("write a tweet", [
+        { question: "Tone?", answer: "Playful" },
+        { question: "Length?", answer: "" },
+      ]),
+    ).toBe("write a tweet\n\n---\nThe user answered these clarifying questions:\n- Tone? Playful");
   });
 });
 

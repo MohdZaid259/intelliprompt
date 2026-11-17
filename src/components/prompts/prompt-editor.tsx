@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LIMITS } from "@/lib/validation";
-import { enhanceAction } from "@/server/actions/prompts";
+import { clarifyAction, enhanceAction } from "@/server/actions/prompts";
+import { ClarifyQuestions, type Answers, type Question } from "./clarify-questions";
 import { VersionDiff } from "./version-diff";
 
 const estimateTokens = (text: string) => Math.ceil(text.length / 4);
@@ -64,14 +65,40 @@ function EnhancePanel({
   onAccept: (enhanced: string) => void;
 }) {
   const [pending, startTransition] = useTransition();
+  const [step, setStep] = useState<"clarifying" | "enhancing" | null>(null);
+  const [questions, setQuestions] = useState<Question[] | null>(null);
+  const [answers, setAnswers] = useState<Answers>({});
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
 
+  const runEnhance = async (picked: Answers) => {
+    setStep("enhancing");
+    setQuestions(null);
+    const result = await enhanceAction({
+      content,
+      answers: Object.entries(picked).map(([question, answer]) => ({ question, answer })),
+    });
+    if (result.ok) setSuggestion(result.data);
+    else toast.error(result.error);
+    setStep(null);
+  };
+  const enhanceWith = (picked: Answers) => startTransition(() => runEnhance(picked));
+
+  // First a few quick questions (goal, audience, length...), then the rewrite.
   const enhance = () =>
     startTransition(async () => {
-      const result = await enhanceAction({ content });
-      if (result.ok) setSuggestion(result.data);
-      else toast.error(result.error);
+      setStep("clarifying");
+      setSuggestion(null);
+      const result = await clarifyAction({ content });
+      if (!result.ok) toast.error(result.error);
+      const asked = result.ok ? result.data.questions : [];
+      if (!result.ok) return setStep(null);
+      if (asked.length === 0) return runEnhance({}); // already specific: skip straight on
+      setStep(null);
+      setAnswers({});
+      setQuestions(asked);
     });
+
+  const reEnhance = () => enhanceWith(answers);
 
   return (
     <div className="flex flex-col gap-2">
@@ -89,8 +116,16 @@ function EnhancePanel({
         {pending ? (
           <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-3 p-6 text-sm">
             <Loader2 className="text-primary size-8 animate-spin" />
-            Enhancing your prompt…
+            {step === "clarifying" ? "Reading your prompt…" : "Enhancing your prompt…"}
           </div>
+        ) : questions ? (
+          <ClarifyQuestions
+            questions={questions}
+            answers={answers}
+            onChange={setAnswers}
+            onSubmit={() => enhanceWith(answers)}
+            onSkip={() => enhanceWith({})}
+          />
         ) : suggestion ? (
           <div className="flex flex-1 flex-col gap-3 p-4">
             <p className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
@@ -121,7 +156,7 @@ function EnhancePanel({
               >
                 <Check /> Replace original
               </Button>
-              <Button type="button" size="sm" variant="outline" onClick={enhance}>
+              <Button type="button" size="sm" variant="outline" onClick={reEnhance}>
                 <RefreshCw /> Re-enhance
               </Button>
               <Button type="button" size="sm" variant="ghost" onClick={() => setSuggestion(null)}>

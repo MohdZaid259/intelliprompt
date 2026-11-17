@@ -124,7 +124,8 @@ export function ComparePanel({
           <FlaskConical className="text-primary size-5" /> AI model testing
         </CardTitle>
         <CardDescription>
-          Run this version on up to {MAX_MODELS} models and compare. {remaining} of{" "}
+          Different models answer the same prompt very differently. Run this version on up to{" "}
+          {MAX_MODELS} and keep the one that answers <em>your</em> prompt best. {remaining} of{" "}
           {limits.runsPerDay} runs left today.
           {models.some((m) => m.locked) && (
             <>
@@ -144,35 +145,7 @@ export function ComparePanel({
           max={MAX_MODELS}
         />
 
-        <div className="bg-muted/30 flex flex-wrap items-end gap-6 rounded-xl border p-4">
-          <label className="w-56 space-y-2 text-sm">
-            <span className="flex justify-between">
-              Temperature{" "}
-              <span className="text-muted-foreground tabular-nums">{temperature.toFixed(1)}</span>
-            </span>
-            <Slider
-              min={0}
-              max={2}
-              step={0.1}
-              value={[temperature]}
-              onValueChange={([v]) => setTemperature(v)}
-            />
-          </label>
-          <label className="space-y-2 text-sm">
-            <span className="block">Max answer length</span>
-            <Select value={String(maxTokens)} onValueChange={(v) => setMaxTokens(Number(v))}>
-              <SelectTrigger className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TOKEN_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)} disabled={n > limits.maxTokens}>
-                    {n.toLocaleString()} tokens
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
+        <div className="flex flex-wrap items-start gap-4">
           <Button
             onClick={() => {
               if (selected.length > remaining) {
@@ -186,6 +159,44 @@ export function ComparePanel({
             <Play /> Run{" "}
             {selected.length > 0 ? `${selected.length} model${selected.length > 1 ? "s" : ""}` : ""}
           </Button>
+          {/* most people never need these; they stay one click away */}
+          <details className="group text-sm">
+            <summary className="text-muted-foreground hover:text-foreground flex h-9 cursor-pointer items-center select-none">
+              Advanced settings
+            </summary>
+            <div className="bg-muted/30 mt-2 flex flex-wrap items-end gap-6 rounded-xl border p-4">
+              <label className="w-56 space-y-2 text-sm">
+                <span className="flex justify-between">
+                  Temperature{" "}
+                  <span className="text-muted-foreground tabular-nums">
+                    {temperature.toFixed(1)}
+                  </span>
+                </span>
+                <Slider
+                  min={0}
+                  max={2}
+                  step={0.1}
+                  value={[temperature]}
+                  onValueChange={([v]) => setTemperature(v)}
+                />
+              </label>
+              <label className="space-y-2 text-sm">
+                <span className="block">Max answer length</span>
+                <Select value={String(maxTokens)} onValueChange={(v) => setMaxTokens(Number(v))}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TOKEN_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)} disabled={n > limits.maxTokens}>
+                        {n.toLocaleString()} tokens
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+            </div>
+          </details>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

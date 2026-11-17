@@ -5,7 +5,10 @@ import type { WorkspaceRun } from "./types";
  * Each model shows only its newest answer, so re-running a model replaces its card.
  * A starred answer always stays visible, even if the model was re-run after it.
  */
-export function groupRuns(runs: WorkspaceRun[]): { current: WorkspaceRun[]; earlier: WorkspaceRun[] } {
+export function groupRuns(runs: WorkspaceRun[]): {
+  current: WorkspaceRun[];
+  earlier: WorkspaceRun[];
+} {
   const seen = new Set<string>();
   const current: WorkspaceRun[] = [];
   const earlier: WorkspaceRun[] = [];
