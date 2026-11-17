@@ -12,11 +12,15 @@ Rules:
 - Add a role or context only when it clearly helps. Do not invent facts the user did not give.
 - Keep it as short as it can be while being unambiguous. Never answer the prompt itself.
 
-Return the improved prompt and 2-5 short bullet points describing what you changed and why.`;
+Return the improved prompt and 2-4 change notes. Each note is a short phrase of at most 8 words, naming what you added or changed, e.g. "Added a 120-word limit" or "Set a warm, friendly tone". No explanations or full sentences.`;
 
 const schema = z.object({
   prompt: z.string().min(1).describe("The improved prompt, ready to use"),
-  changes: z.array(z.string()).min(1).max(5).describe("Short notes on what changed and why"),
+  changes: z
+    .array(z.string())
+    .min(1)
+    .max(5)
+    .describe("2-4 scannable phrases (max 8 words each) naming what changed"),
 });
 
 export type Enhancement = z.infer<typeof schema> & {

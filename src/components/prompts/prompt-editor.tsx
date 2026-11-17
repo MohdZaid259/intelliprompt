@@ -99,9 +99,15 @@ function EnhancePanel({
             <div className="max-h-64 overflow-y-auto text-sm">
               <VersionDiff before={content} after={suggestion.prompt} />
             </div>
-            <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs">
-              {suggestion.changes.map((c) => (
-                <li key={c}>{c}</li>
+            {/* short chips that scan at a glance, not a paragraph to read */}
+            <ul className="flex flex-wrap gap-1.5" aria-label="What changed">
+              {suggestion.changes.slice(0, 4).map((c) => (
+                <li
+                  key={c}
+                  className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {c}
+                </li>
               ))}
             </ul>
             <div className="mt-auto flex flex-wrap gap-2">
@@ -126,15 +132,14 @@ function EnhancePanel({
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
             <Sparkles className="text-primary/70 size-10" />
-            <p className="font-semibold">AI enhancement ready</p>
+            <p className="font-semibold">Enhance it first</p>
             <p className="text-muted-foreground max-w-xs text-sm">
-              Write your prompt, then let AI make it clearer and more specific. You review every
-              change.
+              Write a rough idea, then let AI turn it into a clear, specific prompt. You review
+              every change.
             </p>
             <Button
               type="button"
-              variant="outline"
-              className="border-primary/40 text-primary mt-2 rounded-full"
+              className="mt-2 rounded-full"
               onClick={enhance}
               disabled={!content.trim()}
             >

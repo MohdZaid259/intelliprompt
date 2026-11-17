@@ -18,6 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { parseRunStream, type RunRequest, type RunSummary } from "@/lib/run-protocol";
 import { ModelPicker, type ModelSelection } from "./model-picker";
 import { RunCard } from "./run-card";
+import { groupRuns } from "./run-groups";
 import type { WorkspaceLimits, WorkspaceModel, WorkspaceRun } from "./types";
 
 const MAX_MODELS = 4;
@@ -88,7 +89,9 @@ export function ComparePanel({
       error: null,
       savedId: null,
     }));
-    setLive((all) => [...batch, ...all]);
+    // a re-run takes over the model's card rather than adding another one
+    const rerun = new Set(selected);
+    setLive((all) => [...batch, ...all.filter((r) => !rerun.has(r.modelId))]);
 
     await Promise.all(
       batch.map(async ({ key, modelId }) => {
@@ -108,6 +111,11 @@ export function ComparePanel({
   // Once a live run is saved and the server list includes it, show the saved card instead.
   const savedIds = new Set(runs.map((r) => r.id));
   const visibleLive = live.filter((r) => !(r.savedId && savedIds.has(r.savedId)));
+  // one card per model: a live answer hides that model's older saved one (starred answers stay)
+  const liveModels = new Set(visibleLive.map((r) => r.modelId));
+  const { current, earlier } = groupRuns(runs);
+  const shown = current.filter((r) => r.isBest || !liveModels.has(r.modelId));
+  const hidden = [...current.filter((r) => !shown.includes(r)), ...earlier];
 
   return (
     <Card className="gap-5">
@@ -184,10 +192,22 @@ export function ComparePanel({
           {visibleLive.map((r) => (
             <RunCard key={r.key} kind="live" modelId={r.modelId} text={r.text} error={r.error} />
           ))}
-          {runs.map((r) => (
+          {shown.map((r) => (
             <RunCard key={r.id} kind="saved" run={r} canMarkBest={canMarkBest} />
           ))}
         </div>
+        {hidden.length > 0 && (
+          <details className="group">
+            <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-sm select-none">
+              Earlier answers ({hidden.length})
+            </summary>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {hidden.map((r) => (
+                <RunCard key={r.id} kind="saved" run={r} canMarkBest={canMarkBest} />
+              ))}
+            </div>
+          </details>
+        )}
         {visibleLive.length === 0 && runs.length === 0 && (
           <p className="text-muted-foreground text-sm">
             No answers for this version yet. Pick models and run it.

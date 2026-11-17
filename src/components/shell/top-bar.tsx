@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react";
+import { Plus, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "./breadcrumbs";
 import { ThemeToggle } from "./theme-toggle";
 
-/** The bar above every app page: sidebar toggle, breadcrumbs, theme, plan and upgrade. */
+/** The bar above every app page: sidebar toggle, breadcrumbs, theme, new prompt, plan and upgrade. */
 export function TopBar({ plan }: { plan: PlanKey | null }) {
   return (
     <header className="bg-background/80 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b px-4 backdrop-blur">
@@ -19,6 +19,13 @@ export function TopBar({ plan }: { plan: PlanKey | null }) {
           <ThemeToggle />
           {plan ? (
             <>
+              {/* the main action, one click away on every page */}
+              <Button asChild size="sm" variant="outline">
+                <Link href="/prompts/new">
+                  <Plus className="size-4" />
+                  <span className="hidden sm:inline">New prompt</span>
+                </Link>
+              </Button>
               <Badge
                 variant="outline"
                 className={cn(

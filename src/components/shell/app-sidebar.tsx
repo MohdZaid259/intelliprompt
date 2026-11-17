@@ -71,11 +71,12 @@ export type ShellUser = {
 export type ShellFolder = { id: string; name: string; promptCount: number };
 export type ShellPrompt = { id: string; title: string; folderId: string | null };
 
+// your own work first, the community after
 const MAIN = [
-  { href: "/explore", label: "Explore", icon: UsersIcon, auth: false },
-  { href: "/leaderboard", label: "Leaderboard", icon: TrophyIcon, auth: false },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, auth: true },
   { href: "/library", label: "My Library", icon: LibraryIcon, auth: true },
+  { href: "/explore", label: "Explore", icon: UsersIcon, auth: false },
+  { href: "/leaderboard", label: "Leaderboard", icon: TrophyIcon, auth: false },
   { href: "/blog", label: "Blog", icon: BookIcon, auth: false },
   { href: "/pricing", label: "Pricing", icon: Sparkles, auth: false, signedOutOnly: true },
 ] as const;

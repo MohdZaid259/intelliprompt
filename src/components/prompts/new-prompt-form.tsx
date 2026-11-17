@@ -1,6 +1,6 @@
 "use client";
 
-import { Folder, Inbox, Loader2, Plus } from "lucide-react";
+import { Folder, Inbox, Loader2, Plus, Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export function NewPromptForm({
   const [tags, setTags] = useState("");
   const [content, setContent] = useState("");
   const [folderId, setFolderId] = useState(defaultFolderId ?? NONE);
+  const [enhanced, setEnhanced] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const submit = (e: React.FormEvent) => {
@@ -81,7 +82,14 @@ export function NewPromptForm({
         </div>
       </div>
 
-      <PromptEditor value={content} onChange={setContent} onEnhanced={setContent} />
+      <PromptEditor
+        value={content}
+        onChange={setContent}
+        onEnhanced={(next) => {
+          setContent(next);
+          setEnhanced(true);
+        }}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="tags">Tags</Label>
@@ -93,9 +101,23 @@ export function NewPromptForm({
           className="max-w-md"
         />
       </div>
-      <Button type="submit" disabled={pending || !title.trim() || !content.trim()}>
-        {pending ? <Loader2 className="animate-spin" /> : <Plus />} Create prompt
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          // until it's enhanced, Enhance is the main button and this one steps back
+          variant={enhanced ? "default" : "outline"}
+          disabled={pending || !title.trim() || !content.trim()}
+        >
+          {pending ? <Loader2 className="animate-spin" /> : <Plus />}{" "}
+          {enhanced ? "Create prompt" : "Create without enhancing"}
+        </Button>
+        {!enhanced && content.trim() && (
+          <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
+            <Sparkles className="text-primary size-4" /> You haven&apos;t enhanced this yet. It
+            usually gives much better answers.
+          </p>
+        )}
+      </div>
     </form>
   );
 }
