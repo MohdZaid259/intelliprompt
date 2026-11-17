@@ -7,17 +7,17 @@ import { TryEnhance } from "./try-enhance";
 
 export function Hero() {
   return (
-    <section className="relative px-4 pt-16 pb-20 text-center sm:pt-24">
+    <section className="relative px-4 pt-10 pb-16 text-center sm:pt-24 sm:pb-20">
       <LightRays />
-      <div className="relative mx-auto max-w-3xl space-y-6">
+      <div className="relative mx-auto max-w-3xl space-y-5 sm:space-y-6">
         <p className="text-sm font-medium text-purple-300">AI prompt workbench</p>
-        <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight sm:text-6xl">
+        <h1 className="text-[2rem] leading-[1.1] font-semibold tracking-tight sm:text-6xl">
+          {/* two lines on phones: each half stays whole */}
           <span className="text-gradient">Better prompts,</span>{" "}
-          <span className="text-gradient-accent">proven across models</span>
+          <span className="text-gradient-accent whitespace-nowrap">proven across models</span>
         </h1>
         <p className="mx-auto max-w-xl text-base text-white/60 sm:text-lg">
-          Enhance a rough prompt, compare answers from leading models side by side, and keep the
-          version that wins.
+          Enhance a rough prompt, compare top models side by side, keep the version that wins.
         </p>
         <div className="pt-2">
           <TryEnhance />
@@ -42,7 +42,7 @@ export function Hero() {
           </Button>
         </div>
       </div>
-      <div className="relative mt-14 sm:mt-16">
+      <div className="relative mt-10 sm:mt-16">
         <ProductDemo />
       </div>
     </section>

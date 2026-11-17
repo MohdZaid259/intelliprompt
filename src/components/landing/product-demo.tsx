@@ -247,13 +247,36 @@ export function DemoStill({
     </div>
   );
 }
+/**
+ * On phones the whole 1200×720 screen would shrink to ~30% and its text to ~4 px, so the
+ * frame turns portrait (4:5) and the camera zooms in by this much, following the cursor.
+ */
+const PHONE_ZOOM = 2.2;
+const PHONE_H = (W * 5) / 4;
+/** How far the phone camera leans from the desktop camera's centre toward the cursor. */
+const FOLLOW = 0.45;
+
+/** Clamps a view centre so a view `span` wide never shows past the stage edges [0, size]. */
+const within = (c: number, span: number, size: number) =>
+  span >= size ? size / 2 : Math.min(size - span / 2, Math.max(span / 2, c));
+
 export function ProductDemo() {
   const frameRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
   const [t, setT] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const [phone, setPhone] = useState(false);
 
   useFitScale(frameRef, setScale);
+
+  // matches Tailwind's `sm` breakpoint, which switches the frame's aspect ratio below
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639.98px)");
+    const sync = () => setPhone(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   // run the clock only while visible; respect reduced motion
   useEffect(() => {
@@ -315,6 +338,13 @@ export function ProductDemo() {
   const clickClock = picking ? real : now;
   const step = [...STEPS].reverse().find((st) => now >= st.from) ?? STEPS[0];
 
+  // the view: on phones, zoomed further and leaning toward the cursor, kept inside the stage
+  const boxH = phone ? PHONE_H : H;
+  // the desktop close-ups add only half their zoom here, or panels get cut at the sides
+  const zoom = phone ? PHONE_ZOOM + (s - 1) * 0.5 : s;
+  const fx = phone ? within(reduced ? cx : cx + (mx - cx) * FOLLOW, W / zoom, W) : cx;
+  const fy = phone ? within(reduced ? cy : cy + (my - cy) * FOLLOW, boxH / zoom, H) : cy;
+
   return (
     <figure className="mx-auto w-full max-w-6xl text-left" aria-label="IntelliPrompt product demo">
       <div className="relative rounded-2xl border border-white/10 bg-[#120a1f] p-1.5 shadow-[0_0_80px_rgb(168_85_247/0.25)] sm:p-2">
@@ -330,18 +360,25 @@ export function ProductDemo() {
 
         <div
           ref={frameRef}
-          className="relative overflow-hidden rounded-xl bg-[#0b0613]"
-          style={{ aspectRatio: `${W} / ${H}` }}
+          // portrait on phones (see PHONE_ZOOM); CSS so the first paint already has the right size
+          className="relative aspect-[4/5] overflow-hidden rounded-xl bg-[#0b0613] sm:aspect-[5/3]"
         >
           <div
             className="absolute top-0 left-0 origin-top-left transition-opacity duration-500"
-            style={{ width: W, height: H, transform: `scale(${scale})`, opacity: scale ? 1 : 0 }}
+            style={{
+              width: W,
+              height: boxH,
+              transform: `scale(${scale})`,
+              opacity: scale ? 1 : 0,
+            }}
             aria-hidden
           >
             <div
-              className="absolute inset-0 origin-top-left"
+              className="absolute top-0 left-0 origin-top-left"
               style={{
-                transform: `translate(${W / 2 - cx * s}px, ${H / 2 - cy * s}px) scale(${s})`,
+                width: W,
+                height: H,
+                transform: `translate(${W / 2 - fx * zoom}px, ${boxH / 2 - fy * zoom}px) scale(${zoom})`,
               }}
             >
               <Stage t={now} real={real} />
@@ -351,8 +388,11 @@ export function ProductDemo() {
               <div
                 className="pointer-events-none absolute z-30"
                 style={{
-                  left: W / 2 + (mx - cx) * s,
-                  top: H / 2 + (my - cy) * s,
+                  left: W / 2 + (mx - fx) * zoom,
+                  top: boxH / 2 + (my - fy) * zoom,
+                  // keep the cursor a finger-sized arrow when the stage is shrunk for phones
+                  scale: phone ? 1.8 : undefined,
+                  transformOrigin: "top left",
                 }}
               >
                 {click !== undefined && (
