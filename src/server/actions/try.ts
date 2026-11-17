@@ -26,8 +26,8 @@ async function clientIp() {
 
 /**
  * One free enhance from the home page, no account needed, so people see the core feature
- * before signing up. Capped per visitor IP and for all visitors together, and refused
- * (not allowed through) if the limits can't be checked, since it spends real money.
+ * before signing up. Capped per visitor IP and for all visitors together; if the shared
+ * counter is unreachable it counts per server instead of letting everything through.
  */
 export async function tryEnhanceAction(
   raw: z.input<typeof input>,
@@ -38,11 +38,11 @@ export async function tryEnhanceAction(
   }
 
   const ip = await clientIp();
-  const perVisitor = await checkRateLimit("tryEnhanceIp", ip, undefined, undefined, true);
+  const perVisitor = await checkRateLimit("tryEnhanceIp", ip, undefined, undefined, "local");
   if (!perVisitor.ok) {
     return { ok: false, error: "You've used your free tries. Sign up free to keep enhancing." };
   }
-  const everyone = await checkRateLimit("tryEnhanceGlobal", "all", undefined, undefined, true);
+  const everyone = await checkRateLimit("tryEnhanceGlobal", "all", undefined, undefined, "local");
   if (!everyone.ok) {
     return { ok: false, error: "Free tries are busy right now. Sign up free to keep enhancing." };
   }

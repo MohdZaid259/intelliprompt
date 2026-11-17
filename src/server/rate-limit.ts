@@ -48,11 +48,12 @@ export function memoryStore(): CounterStore {
 }
 
 export function redisStore(url: string): CounterStore {
-  // Commands queue until the connection is up (cold starts), but give up quickly if Redis is down.
+  // Commands queue until the connection is up (cold starts), but give up if Redis is down.
+  // The timeouts allow for a cold connection to a Redis in another region (~200ms per round trip).
   const redis = new Redis(url, {
     maxRetriesPerRequest: 1,
-    connectTimeout: 2000,
-    commandTimeout: 1000,
+    connectTimeout: 3000,
+    commandTimeout: 2500,
   });
   redis.on("error", (err) => console.error("[rate-limit] redis error:", err.message));
   return {
@@ -67,6 +68,7 @@ export function redisStore(url: string): CounterStore {
 }
 
 const globalForLimit = globalThis as unknown as { rateLimitStore?: CounterStore };
+const localFallback = memoryStore();
 
 function defaultStore(): CounterStore {
   globalForLimit.rateLimitStore ??= process.env.REDIS_URL
@@ -82,8 +84,12 @@ export async function checkRateLimit(
   id: string,
   store: CounterStore = defaultStore(),
   now = Date.now(),
-  /** Refuse when the counter can't be checked. For anonymous AI spend, where failing open costs money. */
-  failClosed = false,
+  /**
+   * When the shared counter can't be reached: "allow" lets the request through (the default; a
+   * Redis hiccup shouldn't take the app down), "local" counts in this server's memory instead,
+   * for anonymous AI spend where letting everything through would cost money.
+   */
+  onError: "allow" | "local" = "allow",
 ): Promise<RateLimitResult> {
   const { limit, windowSec } = RATE_LIMITS[name];
   const window = Math.floor(now / 1000 / windowSec);
@@ -93,8 +99,7 @@ export async function checkRateLimit(
     return { ok: false, retryAfterSec: (window + 1) * windowSec - Math.floor(now / 1000) };
   } catch (err) {
     console.error("[rate-limit] check failed:", err);
-    if (failClosed) return { ok: false, retryAfterSec: 60 };
-    // fail open: a Redis hiccup shouldn't take the app down
+    if (onError === "local") return checkRateLimit(name, id, localFallback, now);
     return { ok: true };
   }
 }

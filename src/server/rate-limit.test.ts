@@ -15,6 +15,23 @@ describe("checkRateLimit", () => {
     });
   });
 
+  it("when the store fails, allows by default but counts locally when asked", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const broken = { hit: async () => Promise.reject(new Error("Command timed out")) };
+    const { limit } = RATE_LIMITS.tryEnhanceIp;
+    for (let i = 0; i < limit + 3; i++) {
+      expect((await checkRateLimit("tryEnhanceIp", "1.2.3.4", broken)).ok).toBe(true);
+    }
+    for (let i = 0; i < limit; i++) {
+      expect((await checkRateLimit("tryEnhanceIp", "5.6.7.8", broken, undefined, "local")).ok).toBe(
+        true,
+      );
+    }
+    expect((await checkRateLimit("tryEnhanceIp", "5.6.7.8", broken, undefined, "local")).ok).toBe(
+      false,
+    );
+  });
+
   it("counts users and actions separately", async () => {
     const store = memoryStore();
     for (let i = 0; i < RATE_LIMITS.comment.limit; i++)
